@@ -125,46 +125,43 @@ export async function loadSatelliteGround(terrainMesh, onStatus) {
     const sceneNorth = (geoNorth - MINGYU_LAT) * METERS_PER_LAT;
     const sceneSouth = (geoSouth - MINGYU_LAT) * METERS_PER_LAT;
 
-    // 計算 UV 映射：地形網格頂點對應到貼圖的 UV
-    // 地形 mesh position: x = easting, z = -northing
-    // UV: u = (easting - sceneWest) / (sceneEast - sceneWest)
-    //     v = 1 - (northing - sceneSouth) / (sceneNorth - sceneSouth)
-    //       = 1 - (-z - sceneSouth) / (sceneNorth - sceneSouth)
+    // 計算 UV + 把超出衛星覆蓋區的像素塗成海色（消除殘影）
     const geometry = terrainMesh.geometry;
     const posAttr = geometry.getAttribute('position');
     const uvs = new Float32Array(posAttr.count * 2);
 
     for (let i = 0; i < posAttr.count; i++) {
-      const x = posAttr.getX(i);  // easting
-      const z = posAttr.getZ(i);  // -northing
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
       const northing = -z;
-
       uvs[i * 2] = (x - sceneWest) / (sceneEast - sceneWest);
       uvs[i * 2 + 1] = 1.0 - (northing - sceneSouth) / (sceneNorth - sceneSouth);
     }
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
 
-    // 建立貼圖
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-
-    // 提亮衛星圖：在 canvas 上疊一層半透明白色增加亮度
+    // 提亮衛星圖
     ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = 'rgba(255,255,255,0.15)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = 'source-over';
-    texture.needsUpdate = true;
 
-    // 保存原始材質，切換為貼圖材質（關閉 fog 避免壓暗）
-    // 使用 clipping plane 切掉海面以下的部分，避免衛星圖殘影穿出海面
-    const seaClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // y > 0 才渲染
+    // 建立貼圖（UV 超出 0~1 範圍時 clamp 到邊緣，不重複）
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+
+    // Clipping plane：只渲染 Y > 2 的片段
+    // 海域頂點在 Y=-10，陸地最低在 Y=4（GROUND_ELEVATION）
+    // 設 clip 在 Y=2 可以完全切掉所有海域過渡面
+    const seaClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -2);
+
     const originalMaterial = terrainMesh.material;
     const satMaterial = new THREE.MeshBasicMaterial({
       map: texture,
       fog: false,
-      clippingPlanes: [seaClipPlane],
-      clipShadows: true
+      clippingPlanes: [seaClipPlane]
     });
     terrainMesh.material = satMaterial;
 

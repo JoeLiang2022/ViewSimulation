@@ -73,10 +73,10 @@ function createTerrainMesh() {
 function createSeaPlane() {
   const sea = new THREE.Mesh(
     new THREE.PlaneGeometry(44000, 44000),
-    new THREE.MeshBasicMaterial({ color: 0x7e98a8 })
+    new THREE.MeshBasicMaterial({ color: 0x4a8faa, transparent: true, opacity: 0.85 })
   );
   sea.rotation.x = -Math.PI / 2;
-  sea.position.set(-13000, -0.25, -13000);
+  sea.position.set(-13000, 0.3, -13000);
   return sea;
 }
 
@@ -310,6 +310,33 @@ export function initScene(canvas, bridgeTarget) {
   const terrainMesh = createTerrainMesh();
   scene.add(terrainMesh);
   scene.add(createSeaPlane());
+
+  // 河面覆蓋層（確保基隆河/淡水河在任何模式下都清楚可見）
+  const riverMaterial = new THREE.MeshBasicMaterial({
+    color: 0x3a7a99,
+    transparent: true,
+    opacity: 0.7,
+    depthWrite: false
+  });
+  // 基隆河面（在近景建物旁邊，最重要）
+  const keelungRiver = new THREE.Mesh(
+    new THREE.PlaneGeometry(2200, 280),
+    riverMaterial
+  );
+  keelungRiver.rotation.x = -Math.PI / 2;
+  keelungRiver.position.set(200, 0.6, 180); // 基隆河在明玥南側
+  keelungRiver.rotation.z = 0.15; // 微轉對齊河道方向
+  scene.add(keelungRiver);
+
+  // 淡水河面
+  const tamsuiRiver = new THREE.Mesh(
+    new THREE.PlaneGeometry(12000, 500),
+    riverMaterial
+  );
+  tamsuiRiver.rotation.x = -Math.PI / 2;
+  tamsuiRiver.position.set(-6500, 0.5, -3500);
+  tamsuiRiver.rotation.z = 0.55; // 對齊淡水河走向（西北-東南）
+  scene.add(tamsuiRiver);
 
   // 建物
   const buildingMeshes = createBuildingMeshes(scene);

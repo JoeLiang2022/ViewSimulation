@@ -148,17 +148,19 @@ export async function loadSatelliteGround(terrainMesh, onStatus) {
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
-    if (THREE.SRGBColorSpace !== undefined) {
-      texture.colorSpace = THREE.SRGBColorSpace;
-    } else if (THREE.sRGBEncoding !== undefined) {
-      texture.encoding = THREE.sRGBEncoding;
-    }
 
-    // 保存原始材質，切換為貼圖材質
+    // 提亮衛星圖：在 canvas 上疊一層半透明白色增加亮度
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'source-over';
+    texture.needsUpdate = true;
+
+    // 保存原始材質，切換為貼圖材質（關閉 fog 避免壓暗）
     const originalMaterial = terrainMesh.material;
     terrainMesh.material = new THREE.MeshBasicMaterial({
       map: texture,
-      fog: true
+      fog: false
     });
 
     onStatus(source.name + '✓(' + successCount + '/' + cols * rows + ')');

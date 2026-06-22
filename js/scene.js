@@ -91,16 +91,19 @@ function createSeaPlane() {
 
 /**
  * 建立建物量體 mesh 陣列
+ * 建物從 GROUND_ELEVATION 開始往上蓋，不從 Y=0
  */
 function createBuildingMeshes(scene) {
   const meshes = [];
   for (const building of BUILDINGS) {
     const topHeight = getBuildingTopHeight(building);
+    const buildingHeight = topHeight - GROUND_ELEVATION; // 實際建物高度（不含地基）
     const material = building.ghost
       ? new THREE.MeshLambertMaterial({ color: building.color, transparent: true, opacity: 0.5 })
       : new THREE.MeshLambertMaterial({ color: building.color });
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(building.w, topHeight, building.d), material);
-    mesh.position.set(building.e, topHeight / 2, -building.n);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(building.w, buildingHeight, building.d), material);
+    // box 中心在 GROUND_ELEVATION + buildingHeight/2 = (GROUND + top) / 2
+    mesh.position.set(building.e, GROUND_ELEVATION + buildingHeight / 2, -building.n);
     scene.add(mesh);
     meshes.push(mesh);
   }

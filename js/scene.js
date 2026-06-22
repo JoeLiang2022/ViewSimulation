@@ -79,13 +79,13 @@ function createTerrainMesh() {
  * 建立海平面
  */
 function createSeaPlane() {
-  // 海面平面：使用 depthWrite + 高 renderOrder 確保完全遮蓋下方的海域地形
+  // 海面平面：放在 Y=-1，確保不會 z-fight 到陸地(Y=4+)
   const sea = new THREE.Mesh(
     new THREE.PlaneGeometry(120000, 120000),
     new THREE.MeshBasicMaterial({ color: 0x1a6080, depthWrite: true })
   );
   sea.rotation.x = -Math.PI / 2;
-  sea.position.set(0, 0.1, 0);
+  sea.position.set(0, -1, 0);
   return sea;
 }
 
@@ -324,33 +324,6 @@ export function initScene(canvas, bridgeTarget) {
   const terrainMesh = createTerrainMesh();
   scene.add(terrainMesh);
   scene.add(createSeaPlane());
-
-  // 河面覆蓋層（確保基隆河/淡水河在任何模式下都清楚可見）
-  const riverMaterial = new THREE.MeshBasicMaterial({
-    color: 0x2a6a8a,
-    transparent: true,
-    opacity: 0.75,
-    depthWrite: false
-  });
-  // 基隆河面（在近景建物旁邊，最重要）
-  const keelungRiver = new THREE.Mesh(
-    new THREE.PlaneGeometry(2200, 280),
-    riverMaterial
-  );
-  keelungRiver.rotation.x = -Math.PI / 2;
-  keelungRiver.position.set(200, 0.6, 180); // 基隆河在明玥南側
-  keelungRiver.rotation.z = 0.15; // 微轉對齊河道方向
-  scene.add(keelungRiver);
-
-  // 淡水河面
-  const tamsuiRiver = new THREE.Mesh(
-    new THREE.PlaneGeometry(12000, 500),
-    riverMaterial
-  );
-  tamsuiRiver.rotation.x = -Math.PI / 2;
-  tamsuiRiver.position.set(-6500, 0.5, -3500);
-  tamsuiRiver.rotation.z = 0.55; // 對齊淡水河走向（西北-東南）
-  scene.add(tamsuiRiver);
 
   // 海面標示：在出海口附近加一圈白色泡沫線，標示海岸線
   const shorelineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });

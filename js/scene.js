@@ -213,10 +213,10 @@ function createRoadRibbon(points, width, color, scene) {
     const perpN = dx / length * halfWidth;
 
     positions.push(
-      a[0] + perpE, 4.7, -(a[1] + perpN),
-      a[0] - perpE, 4.7, -(a[1] - perpN),
-      b[0] + perpE, 4.7, -(b[1] + perpN),
-      b[0] - perpE, 4.7, -(b[1] - perpN)
+      a[0] + perpE, 5.5, -(a[1] + perpN),
+      a[0] - perpE, 5.5, -(a[1] - perpN),
+      b[0] + perpE, 5.5, -(b[1] + perpN),
+      b[0] - perpE, 5.5, -(b[1] - perpN)
     );
     indices.push(vertexIndex, vertexIndex + 1, vertexIndex + 2, vertexIndex + 1, vertexIndex + 3, vertexIndex + 2);
     vertexIndex += 4;
@@ -226,56 +226,51 @@ function createRoadRibbon(points, width, color, scene) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
-  scene.add(new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color, side: THREE.DoubleSide })));
+  scene.add(new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+    color, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1
+  })));
 }
 
 /**
  * 建立裝飾物件（操場、庭園、公園）
  */
 function createDecorations(decorGroup) {
+  // 所有地面裝飾使用 polygonOffset 確保渲染在地形之上
+  const fieldMat = new THREE.MeshLambertMaterial({ color: 0x5c8a45, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  const trackMat = new THREE.MeshBasicMaterial({ color: 0xb15a40, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  const infieldMat = new THREE.MeshLambertMaterial({ color: 0x4f7d38, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  const gardenMat = new THREE.MeshLambertMaterial({ color: 0x6cae55, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  const parkMat = new THREE.MeshLambertMaterial({ color: 0x4f8f4e, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+
   // 洲美國小操場
-  const field = new THREE.Mesh(
-    new THREE.PlaneGeometry(168, 138),
-    new THREE.MeshLambertMaterial({ color: 0x5c8a45 })
-  );
+  const field = new THREE.Mesh(new THREE.PlaneGeometry(168, 138), fieldMat);
   field.rotation.x = -Math.PI / 2;
-  field.position.set(-128, 4.3, -126);
+  field.position.set(-128, 5.5, -126);
   decorGroup.add(field);
 
-  const track = new THREE.Mesh(
-    new THREE.RingGeometry(38, 50, 36),
-    new THREE.MeshBasicMaterial({ color: 0xb15a40, side: THREE.DoubleSide })
-  );
+  const track = new THREE.Mesh(new THREE.RingGeometry(38, 50, 36), trackMat);
   track.rotation.x = -Math.PI / 2;
-  track.position.set(-112, 4.6, -108);
+  track.position.set(-112, 5.8, -108);
   track.scale.set(1.4, 1, 1);
   decorGroup.add(track);
 
-  const infield = new THREE.Mesh(
-    new THREE.CircleGeometry(38, 28),
-    new THREE.MeshLambertMaterial({ color: 0x4f7d38 })
-  );
+  const infield = new THREE.Mesh(new THREE.CircleGeometry(38, 28), infieldMat);
   infield.rotation.x = -Math.PI / 2;
-  infield.position.set(-112, 4.5, -108);
+  infield.position.set(-112, 5.7, -108);
   infield.scale.set(1.4, 1, 1);
   decorGroup.add(infield);
 
   // 明玥庭園
-  const garden = new THREE.Mesh(
-    new THREE.PlaneGeometry(74, 60),
-    new THREE.MeshLambertMaterial({ color: 0x6cae55 })
-  );
+  const garden = new THREE.Mesh(new THREE.PlaneGeometry(74, 60), gardenMat);
   garden.rotation.x = -Math.PI / 2;
-  garden.position.set(0, 0.6, -2);
+  garden.position.set(0, 5.2, -2);
   decorGroup.add(garden);
 
   // 公園綠地
-  const park = new THREE.Mesh(
-    new THREE.PlaneGeometry(130, 120),
-    new THREE.MeshLambertMaterial({ color: 0x4f8f4e })
-  );
+  const park = new THREE.Mesh(new THREE.PlaneGeometry(130, 120), parkMat);
   park.rotation.x = -Math.PI / 2;
-  park.position.set(255, 4.3, -175);
+  park.position.set(255, 5.5, -175);
   decorGroup.add(park);
 }
 
@@ -284,7 +279,7 @@ function createDecorations(decorGroup) {
  * @returns {{ scene, camera, renderer, decorGroup, buildingMeshes }}
  */
 export function initScene(canvas, bridgeTarget) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, logarithmicDepthBuffer: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.localClippingEnabled = true;  // 啟用材質層級的 clipping plane
 

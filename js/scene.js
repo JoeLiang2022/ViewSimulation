@@ -46,9 +46,12 @@ function createTerrainMesh() {
 
       // 海域頂點下沉到海平面以下，讓海面平面覆蓋
       // 河流頂點也微降，讓河面層覆蓋
+      // 觀測點附近（半徑100m內）地形下沉，避免遮擋俯瞰視線
       let vertexHeight;
+      const distFromOrigin = Math.hypot(easting, northing);
       if (terrain.type === 'sea') vertexHeight = -10;
       else if (terrain.type === 'river') vertexHeight = -0.5;
+      else if (distFromOrigin < 100) vertexHeight = -2; // 觀測點腳下不渲染地形
       else vertexHeight = terrain.height;
       positions.push(easting, vertexHeight, -northing);
       const color = getTerrainColor(terrain.height, terrain.type);

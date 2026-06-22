@@ -66,7 +66,7 @@ async function main() {
   // --- 狀態變數 ---
   let observerIndex = 0;
   let yaw = Math.atan2(TARGETS.SEA[0] - getObserver().e, TARGETS.SEA[1] - getObserver().n);
-  let pitch = -0.04;
+  let pitch = -0.15;  // 預設稍微往下看，可以看到地面和建物
   let fieldOfView = 60;
   let currentTarget = TARGETS.SEA;
   let showLabels = true;
@@ -179,6 +179,10 @@ async function main() {
     const floor = +floorSlider.value;
     const eyeHeight = floorToEyeHeight(floor);
 
+    // 自動調整預設俯角：樓層越高，稍微向下看，避免地面蓋住視野
+    // 不覆寫使用者手動拖曳的 pitch
+    // (只在按鈕觸發時會 setPitch，手動拖曳直接改 pitch 值)
+
     // 更新樓層顯示
     document.getElementById('flN').textContent = floor;
     document.getElementById('htV').textContent = Math.round(eyeHeight);
@@ -247,7 +251,7 @@ async function main() {
   document.getElementById('bSea').onclick = () => {
     currentTarget = TARGETS.SEA;
     yaw = Math.atan2(TARGETS.SEA[0] - getObserver().e, TARGETS.SEA[1] - getObserver().n);
-    setPitch(-0.04);
+    setPitch(-0.12);
     document.getElementById('cName').textContent = '出海口';
     refresh();
   };
@@ -255,7 +259,7 @@ async function main() {
   document.getElementById('bBridge').onclick = () => {
     currentTarget = TARGETS.BRIDGE;
     yaw = Math.atan2(TARGETS.BRIDGE[0] - getObserver().e, TARGETS.BRIDGE[1] - getObserver().n);
-    setPitch(-0.02);
+    setPitch(-0.10);
     document.getElementById('cName').textContent = '淡江大橋';
     refresh();
   };

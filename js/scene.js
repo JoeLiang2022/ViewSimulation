@@ -262,7 +262,6 @@ function createDecorations(decorGroup) {
   decorGroup.add(infield);
 
   // 明玥庭園（分成四塊環繞建物四周，不放在正下方避免遮蔽視野）
-  const gardenMat = new THREE.MeshLambertMaterial({ color: 0x6cae55, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
   const gardenPositions = [
     { x: -30, z: 0, w: 20, d: 50 },   // 西側
     { x: 30, z: 0, w: 20, d: 50 },    // 東側

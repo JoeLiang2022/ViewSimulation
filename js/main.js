@@ -66,7 +66,7 @@ async function main() {
   // --- 狀態變數 ---
   let observerIndex = 0;
   let yaw = Math.atan2(TARGETS.SEA[0] - getObserver().e, TARGETS.SEA[1] - getObserver().n);
-  let pitch = -0.15;  // 預設稍微往下看，可以看到地面和建物
+  let pitch = -0.35;  // 預設俯瞰角度，確保能看到地面
   let fieldOfView = 60;
   let currentTarget = TARGETS.SEA;
   let showLabels = true;
@@ -251,7 +251,7 @@ async function main() {
   document.getElementById('bSea').onclick = () => {
     currentTarget = TARGETS.SEA;
     yaw = Math.atan2(TARGETS.SEA[0] - getObserver().e, TARGETS.SEA[1] - getObserver().n);
-    setPitch(-0.12);
+    setPitch(-0.35);
     document.getElementById('cName').textContent = '出海口';
     refresh();
   };
@@ -259,7 +259,7 @@ async function main() {
   document.getElementById('bBridge').onclick = () => {
     currentTarget = TARGETS.BRIDGE;
     yaw = Math.atan2(TARGETS.BRIDGE[0] - getObserver().e, TARGETS.BRIDGE[1] - getObserver().n);
-    setPitch(-0.10);
+    setPitch(-0.30);
     document.getElementById('cName').textContent = '淡江大橋';
     refresh();
   };

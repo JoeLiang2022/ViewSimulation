@@ -46,12 +46,12 @@ function createTerrainMesh() {
 
       // 海域頂點下沉到海平面以下，讓海面平面覆蓋
       // 河流頂點也微降，讓河面層覆蓋
-      // 觀測點附近（半徑100m內）地形下沉，避免遮擋俯瞰視線
+      // 開發區附近（半徑600m內）地形下沉，讓道路/操場/河流等細節物件顯示
       let vertexHeight;
       const distFromOrigin = Math.hypot(easting, northing);
       if (terrain.type === 'sea') vertexHeight = -10;
       else if (terrain.type === 'river') vertexHeight = -0.5;
-      else if (distFromOrigin < 100) vertexHeight = -2; // 觀測點腳下不渲染地形
+      else if (distFromOrigin < 600) vertexHeight = -2; // 開發區內不渲染地形
       else vertexHeight = terrain.height;
       positions.push(easting, vertexHeight, -northing);
       const color = getTerrainColor(terrain.height, terrain.type);
@@ -330,6 +330,13 @@ export function initScene(canvas, bridgeTarget) {
   const terrainMesh = createTerrainMesh();
   scene.add(terrainMesh);
   scene.add(createSeaPlane());
+
+  // 開發區基底平面（取代被下沉的地形，深色底，讓道路/操場顯示在上方）
+  const devGroundMat = new THREE.MeshLambertMaterial({ color: 0x3d5c3a });
+  const devGround = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), devGroundMat);
+  devGround.rotation.x = -Math.PI / 2;
+  devGround.position.set(0, 3.8, -150);
+  scene.add(devGround);
 
   // 海面標示：在出海口附近加一圈白色泡沫線，標示海岸線
   const shorelineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });

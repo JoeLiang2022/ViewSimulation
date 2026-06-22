@@ -73,7 +73,7 @@ function createTerrainMesh() {
 function createSeaPlane() {
   const sea = new THREE.Mesh(
     new THREE.PlaneGeometry(44000, 44000),
-    new THREE.MeshBasicMaterial({ color: 0x4a8faa, transparent: true, opacity: 0.85 })
+    new THREE.MeshBasicMaterial({ color: 0x1a6080 })
   );
   sea.rotation.x = -Math.PI / 2;
   sea.position.set(-13000, 0.3, -13000);
@@ -279,22 +279,23 @@ export function initScene(canvas, bridgeTarget) {
   const decorGroup = new THREE.Group();
   scene.add(decorGroup);
 
-  // 天空漸層背景
+  // 天空漸層背景（下方偏暖白，與深藍海面形成明顯對比）
   const skyCanvas = document.createElement('canvas');
   skyCanvas.width = 2;
   skyCanvas.height = 256;
   const skyCtx = skyCanvas.getContext('2d');
   const gradient = skyCtx.createLinearGradient(0, 0, 0, 256);
-  gradient.addColorStop(0, '#90a9bd');
-  gradient.addColorStop(0.45, '#c2d2da');
-  gradient.addColorStop(0.8, '#dde7ea');
-  gradient.addColorStop(1, '#e8eef0');
+  gradient.addColorStop(0, '#5b8ebd');
+  gradient.addColorStop(0.35, '#8cb8d6');
+  gradient.addColorStop(0.65, '#c8dce8');
+  gradient.addColorStop(0.85, '#e8eff4');
+  gradient.addColorStop(1, '#f5f0e8');
   skyCtx.fillStyle = gradient;
   skyCtx.fillRect(0, 0, 2, 256);
   scene.background = new THREE.CanvasTexture(skyCanvas);
 
-  // 霧效
-  scene.fog = new THREE.Fog(0xccd8de, 3200, 15500);
+  // 霧效（遠處淡化，但不過早開始以免遮住海面）
+  scene.fog = new THREE.Fog(0xe8eff4, 8000, 28000);
 
   // 相機
   const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 1, 42000);
@@ -313,9 +314,9 @@ export function initScene(canvas, bridgeTarget) {
 
   // 河面覆蓋層（確保基隆河/淡水河在任何模式下都清楚可見）
   const riverMaterial = new THREE.MeshBasicMaterial({
-    color: 0x3a7a99,
+    color: 0x2a6a8a,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.75,
     depthWrite: false
   });
   // 基隆河面（在近景建物旁邊，最重要）
@@ -337,6 +338,18 @@ export function initScene(canvas, bridgeTarget) {
   tamsuiRiver.position.set(-6500, 0.5, -3500);
   tamsuiRiver.rotation.z = 0.55; // 對齊淡水河走向（西北-東南）
   scene.add(tamsuiRiver);
+
+  // 海面標示：在出海口附近加一圈白色泡沫線，標示海岸線
+  const shorelineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+  const shorelinePoints = [
+    new THREE.Vector3(-12500, 1.5, -7500),
+    new THREE.Vector3(-11500, 1.5, -8000),
+    new THREE.Vector3(-10700, 1.5, -8240),
+    new THREE.Vector3(-9800, 1.5, -8600),
+    new THREE.Vector3(-8500, 1.5, -9200),
+  ];
+  const shorelineGeom = new THREE.BufferGeometry().setFromPoints(shorelinePoints);
+  scene.add(new THREE.Line(shorelineGeom, shorelineMaterial));
 
   // 建物
   const buildingMeshes = createBuildingMeshes(scene);

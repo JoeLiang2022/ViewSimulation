@@ -283,6 +283,7 @@ function createDecorations(decorGroup) {
 export function initScene(canvas, bridgeTarget) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.localClippingEnabled = true;  // 啟用材質層級的 clipping plane
 
   const scene = new THREE.Scene();
   const decorGroup = new THREE.Group();

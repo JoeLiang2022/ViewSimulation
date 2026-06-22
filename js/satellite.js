@@ -157,11 +157,16 @@ export async function loadSatelliteGround(terrainMesh, onStatus) {
     texture.needsUpdate = true;
 
     // 保存原始材質，切換為貼圖材質（關閉 fog 避免壓暗）
+    // 使用 clipping plane 切掉海面以下的部分，避免衛星圖殘影穿出海面
+    const seaClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // y > 0 才渲染
     const originalMaterial = terrainMesh.material;
-    terrainMesh.material = new THREE.MeshBasicMaterial({
+    const satMaterial = new THREE.MeshBasicMaterial({
       map: texture,
-      fog: false
+      fog: false,
+      clippingPlanes: [seaClipPlane],
+      clipShadows: true
     });
+    terrainMesh.material = satMaterial;
 
     onStatus(source.name + '✓(' + successCount + '/' + cols * rows + ')');
     return { texture, originalMaterial };

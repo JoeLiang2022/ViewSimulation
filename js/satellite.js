@@ -18,7 +18,7 @@ const TILE_SOURCES = [
 /**
  * 載入單張地圖 tile（含超時處理）
  */
-function loadTile(source, zoom, tileX, tileY, timeoutMs = 6000) {
+function loadTile(source, zoom, tileX, tileY, timeoutMs = 10000) {
   return new Promise(resolve => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -38,12 +38,12 @@ function loadTile(source, zoom, tileX, tileY, timeoutMs = 6000) {
  * @returns {THREE.Mesh|null} 已建立的 mesh，或 null 表示失敗
  */
 export async function loadSatelliteGround(scene, decorGroup, onStatus) {
-  const ZOOM = 15;
+  const ZOOM = 14;  // 降一級zoom = 每 tile 涵蓋更大範圍，減少請求數
   const TILE_COUNT = Math.pow(2, ZOOM);
   const TILE_SIZE = 256;
 
-  // 涵蓋範圍：社子島/基隆河/淡水河近段/開發區
-  const EAST_WEST = -5000, EAST_EAST = 1900, NORTH_SOUTH = -2900, NORTH_NORTH = 2400;
+  // 擴大涵蓋範圍：整個視線可見近景（社子島全域/基隆河/淡水河/關渡平原/開發區）
+  const EAST_WEST = -12000, EAST_EAST = 3000, NORTH_SOUTH = -4000, NORTH_NORTH = 9000;
   const latNW = MINGYU_LAT + NORTH_NORTH / METERS_PER_LAT;
   const lonNW = MINGYU_LNG + EAST_WEST / METERS_PER_LNG;
   const latSE = MINGYU_LAT + NORTH_SOUTH / METERS_PER_LAT;
@@ -59,7 +59,7 @@ export async function loadSatelliteGround(scene, decorGroup, onStatus) {
   const yMin = latToTileY(latNW), yMax = latToTileY(latSE);
   const cols = xMax - xMin + 1, rows = yMax - yMin + 1;
 
-  if (cols < 1 || rows < 1 || cols * rows > 72) {
+  if (cols < 1 || rows < 1 || cols * rows > 150) {
     onStatus('範圍異常');
     return null;
   }
@@ -107,12 +107,19 @@ export async function loadSatelliteGround(scene, decorGroup, onStatus) {
       texture.encoding = THREE.sRGBEncoding;
     }
 
+    // 使用不受光源影響的材質 + 提亮，避免衛星底圖顏色偏暗
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      color: 0xffffff,
+      toneMapped: false
+    });
+
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(sceneEast - sceneWest, sceneNorth - sceneSouth),
-      new THREE.MeshBasicMaterial({ map: texture })
+      material
     );
     mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set((sceneWest + sceneEast) / 2, 4.25, -(sceneSouth + sceneNorth) / 2);
+    mesh.position.set((sceneWest + sceneEast) / 2, 4.8, -(sceneSouth + sceneNorth) / 2);
     scene.add(mesh);
     decorGroup.visible = false;
 

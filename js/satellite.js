@@ -46,9 +46,9 @@ export async function loadSatelliteGround(terrainMesh, onStatus) {
   const TILE_COUNT = Math.pow(2, ZOOM);
   const TILE_SIZE = 256;
 
-  // 地形網格的世界範圍 — 聚焦核心可見區域減少 tile 數量
-  const EAST_MIN = -12000, EAST_MAX = 2000;
-  const NORTH_MIN = -3000, NORTH_MAX = 10000;
+  // 衛星底圖覆蓋核心區域（不需要覆蓋整個 60km 地形）
+  const EAST_MIN = -14000, EAST_MAX = 4000;
+  const NORTH_MIN = -5000, NORTH_MAX = 12000;
 
   // 轉為經緯度
   const latSouth = MINGYU_LAT + NORTH_MIN / METERS_PER_LAT;

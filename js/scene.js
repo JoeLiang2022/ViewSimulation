@@ -29,9 +29,11 @@ function getTerrainColor(height, type) {
  * 建立地形網格
  */
 function createTerrainMesh() {
-  const EAST_MIN = -16000, EAST_MAX = 3000;
-  const NORTH_MIN = -4000, NORTH_MAX = 15000;
-  const GRID_COLS = 234, GRID_ROWS = 224;
+  // 擴大地形範圍覆蓋整個北台灣可見區域（約 60km × 60km）
+  // 站在 1000F (~3400m) 時視距約 200km，需要能看到海岸輪廓
+  const EAST_MIN = -30000, EAST_MAX = 20000;
+  const NORTH_MIN = -25000, NORTH_MAX = 30000;
+  const GRID_COLS = 280, GRID_ROWS = 280;
 
   const geometry = new THREE.BufferGeometry();
   const positions = [], colors = [], indices = [];
@@ -72,11 +74,11 @@ function createTerrainMesh() {
  */
 function createSeaPlane() {
   const sea = new THREE.Mesh(
-    new THREE.PlaneGeometry(44000, 44000),
+    new THREE.PlaneGeometry(120000, 120000),
     new THREE.MeshBasicMaterial({ color: 0x1a6080 })
   );
   sea.rotation.x = -Math.PI / 2;
-  sea.position.set(-13000, 0.3, -13000);
+  sea.position.set(0, -0.5, 0);
   return sea;
 }
 
@@ -297,8 +299,8 @@ export function initScene(canvas, bridgeTarget) {
   // 霧效（遠處淡化，但不過早開始以免遮住海面）
   scene.fog = new THREE.Fog(0xe8eff4, 8000, 28000);
 
-  // 相機
-  const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 1, 42000);
+  // 相機（遠裁面加大，站高樓時能看到遠處海岸線）
+  const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 1, 80000);
 
   // 光源
   scene.add(new THREE.AmbientLight(0xffffff, 0.58));

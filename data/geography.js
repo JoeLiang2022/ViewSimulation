@@ -16,7 +16,17 @@ export const PEAKS = [
   { e: -7975, n: 3222, amplitude: 291, spread: 1100 },  // 觀音山前峰
   { e: -8676, n: 2390, amplitude: 612, spread: 1400 },  // 觀音山主峰
   { e: 2500, n: 10500, amplitude: 1086, spread: 2400 }, // 大屯山
-  { e: -12500, n: -3000, amplitude: 180, spread: 3500 } // 林口台地
+  { e: -12500, n: -3000, amplitude: 180, spread: 3500 },// 林口台地
+  // 擴展：北台灣主要山系
+  { e: 4500, n: 8500, amplitude: 1120, spread: 2200 },  // 七星山
+  { e: 6000, n: 12000, amplitude: 900, spread: 2800 },  // 磺嘴山
+  { e: -2000, n: 6500, amplitude: 470, spread: 1600 },  // 紗帽山/陽明山
+  { e: -10000, n: -8000, amplitude: 250, spread: 4000 },// 林口台地延伸
+  { e: -15000, n: 10000, amplitude: 180, spread: 2500 },// 北海岸丘陵
+  { e: 10000, n: -5000, amplitude: 350, spread: 4500 }, // 南港/汐止丘陵
+  { e: -5000, n: -10000, amplitude: 80, spread: 3000 }, // 三重/蘆洲平地微隆
+  { e: 8000, n: 18000, amplitude: 600, spread: 3500 },  // 基隆山區
+  { e: -18000, n: 8000, amplitude: 250, spread: 2000 }, // 三芝丘陵
 ];
 
 /** 基隆河北岸折線（由西到東） */

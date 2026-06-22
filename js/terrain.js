@@ -75,6 +75,12 @@ function getKeelungBankNorth(easting) {
  *   type: 'sea' | 'river' | 'wet' | 'land'
  */
 export function getTerrainAt(easting, northing) {
+  // 北台灣海岸線判定（簡化多邊形）
+  // 超出陸地範圍的都是海
+  if (!isOnLand(easting, northing)) {
+    return { height: 0, type: 'sea' };
+  }
+
   // 海域判定（出海口以北）
   if (easting < -8200 && northing > 6600) {
     return { height: 0, type: 'sea' };
@@ -111,4 +117,38 @@ export function getTerrainAt(easting, northing) {
     height += peak.amplitude * Math.exp(-distSq / (2 * peak.spread * peak.spread));
   }
   return { height, type: 'land' };
+}
+
+/**
+ * 判斷座標是否在北台灣陸地範圍內
+ * 簡化的海岸線多邊形（以明玥為原點的公尺座標）
+ * 涵蓋：淡水→基隆→東北角→北海岸的概略輪廓
+ */
+const COASTLINE = [
+  // 從淡水河口開始，順時針
+  [-11500, 9500],    // 淡水河口北岸
+  [-13000, 7000],    // 淡水沙崙
+  [-16000, 5000],    // 三芝海岸
+  [-20000, 8000],    // 石門
+  [-22000, 14000],   // 金山
+  [-18000, 22000],   // 萬里
+  [-12000, 26000],   // 基隆港
+  [-5000, 28000],    // 瑞芳方向
+  [5000, 26000],     // 東北角
+  [15000, 20000],    // 貢寮
+  [20000, 12000],    // 東側海岸
+  [20000, -5000],    // 東南
+  [15000, -15000],   // 南側
+  [5000, -22000],    // 西南
+  [-5000, -25000],   // 桃園海岸
+  [-15000, -22000],  // 桃園外海邊界
+  [-22000, -15000],  // 林口海岸
+  [-25000, -5000],   // 八里海岸
+  [-20000, 3000],    // 八里→淡水
+  [-14000, 7500],    // 回到淡水
+  [-11500, 9500],    // 閉合
+];
+
+function isOnLand(easting, northing) {
+  return isInsidePolygon(easting, northing, COASTLINE);
 }

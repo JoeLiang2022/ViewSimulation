@@ -14,7 +14,7 @@ export const BUILDINGS = [
   { name: '達麗河蘊B 14F', e: 17, n: 64, w: 28, d: 26, fl: 14, color: 0x49565f },
   { name: '國際羽球館', e: -288, n: 162, w: 92, d: 78, fl: 5, color: 0x6f93a8 },
   { name: '洲美國中小', e: -140, n: 176, w: 120, d: 20, fl: 5, color: 0xcabfa3 },
-  { name: '洲美國中小', e: -198, n: 120, w: 22, d: 96, fl: 5, color: 0xcabfa3 },
+  { name: '洲美國中小', e: -198, n: 210, w: 22, d: 60, fl: 5, color: 0xcabfa3 },
   { name: '住宅 住3-2 15F', e: -209, n: 256, w: 36, d: 32, fl: 15, color: 0x7a86a8, vp: true },
   { name: '住宅 住3-2 15F', e: -245, n: 250, w: 30, d: 30, fl: 15, color: 0x7a86a8 },
   { name: '住宅 住3-2 15F', e: -173, n: 251, w: 30, d: 30, fl: 15, color: 0x7a86a8 },

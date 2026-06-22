@@ -44,7 +44,13 @@ function createTerrainMesh() {
       const northing = NORTH_MIN + (NORTH_MAX - NORTH_MIN) * row / GRID_ROWS;
       const terrain = getTerrainAt(easting, northing);
 
-      positions.push(easting, terrain.height, -northing);
+      // 海域頂點下沉到海平面以下，讓海面平面覆蓋
+      // 河流頂點也微降，讓河面層覆蓋
+      let vertexHeight;
+      if (terrain.type === 'sea') vertexHeight = -2;
+      else if (terrain.type === 'river') vertexHeight = -0.5;
+      else vertexHeight = terrain.height;
+      positions.push(easting, vertexHeight, -northing);
       const color = getTerrainColor(terrain.height, terrain.type);
       colors.push(color.r, color.g, color.b);
     }

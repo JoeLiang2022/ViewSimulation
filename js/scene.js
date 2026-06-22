@@ -261,11 +261,20 @@ function createDecorations(decorGroup) {
   infield.scale.set(1.4, 1, 1);
   decorGroup.add(infield);
 
-  // 明玥庭園
-  const garden = new THREE.Mesh(new THREE.PlaneGeometry(74, 60), gardenMat);
-  garden.rotation.x = -Math.PI / 2;
-  garden.position.set(0, 5.2, -2);
-  decorGroup.add(garden);
+  // 明玥庭園（分成四塊環繞建物四周，不放在正下方避免遮蔽視野）
+  const gardenMat = new THREE.MeshLambertMaterial({ color: 0x6cae55, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+  const gardenPositions = [
+    { x: -30, z: 0, w: 20, d: 50 },   // 西側
+    { x: 30, z: 0, w: 20, d: 50 },    // 東側
+    { x: 0, z: 30, w: 50, d: 16 },    // 北側
+    { x: 0, z: -30, w: 50, d: 16 },   // 南側
+  ];
+  gardenPositions.forEach(g => {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(g.w, g.d), gardenMat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(g.x, 5.0, -g.z);
+    decorGroup.add(mesh);
+  });
 
   // 公園綠地
   const park = new THREE.Mesh(new THREE.PlaneGeometry(130, 120), parkMat);

@@ -47,7 +47,7 @@ function createTerrainMesh() {
       // 海域頂點下沉到海平面以下，讓海面平面覆蓋
       // 河流頂點也微降，讓河面層覆蓋
       let vertexHeight;
-      if (terrain.type === 'sea') vertexHeight = -2;
+      if (terrain.type === 'sea') vertexHeight = -10;
       else if (terrain.type === 'river') vertexHeight = -0.5;
       else vertexHeight = terrain.height;
       positions.push(easting, vertexHeight, -northing);
@@ -79,12 +79,13 @@ function createTerrainMesh() {
  * 建立海平面
  */
 function createSeaPlane() {
+  // 海面平面：使用 depthWrite + 高 renderOrder 確保完全遮蓋下方的海域地形
   const sea = new THREE.Mesh(
     new THREE.PlaneGeometry(120000, 120000),
-    new THREE.MeshBasicMaterial({ color: 0x1a6080 })
+    new THREE.MeshBasicMaterial({ color: 0x1a6080, depthWrite: true })
   );
   sea.rotation.x = -Math.PI / 2;
-  sea.position.set(0, -0.5, 0);
+  sea.position.set(0, 0.1, 0);
   return sea;
 }
 

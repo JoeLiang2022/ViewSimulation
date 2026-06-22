@@ -61,7 +61,7 @@ async function main() {
 
   // --- 場景初始化 ---
   const canvas = document.getElementById('scene');
-  const { scene, camera, renderer, decorGroup, buildingMeshes } = initScene(canvas, TARGETS.BRIDGE);
+  const { scene, camera, renderer, decorGroup, buildingMeshes, terrainMesh } = initScene(canvas, TARGETS.BRIDGE);
 
   // --- 狀態變數 ---
   let observerIndex = 0;
@@ -74,7 +74,7 @@ async function main() {
   let isMap2dOn = false;
   let leafletMap = null;
   let observerMarker = null;
-  let satPlane = null;
+  let satPlane = null;  // now stores { texture, originalMaterial } or null
   let minSeaFloor = findMinSeaFloor(TARGETS.SEA, getObserver());
 
   // 2D ortho 相關
@@ -342,16 +342,18 @@ async function main() {
   // 衛星底圖
   document.getElementById('bsat').onclick = async function () {
     if (satPlane) {
-      removeSatelliteGround(satPlane, scene, decorGroup);
+      removeSatelliteGround(terrainMesh, satPlane);
       satPlane = null;
+      decorGroup.visible = true;
       this.textContent = '衛星底圖';
       this.classList.remove('on');
       return;
     }
     const btn = this;
     try {
-      satPlane = await loadSatelliteGround(scene, decorGroup, (text) => { btn.textContent = text; });
+      satPlane = await loadSatelliteGround(terrainMesh, (text) => { btn.textContent = text; });
       if (satPlane) {
+        decorGroup.visible = false;  // 隱藏操場、庭園等裝飾（被衛星圖取代）
         btn.classList.add('on');
       } else {
         btn.textContent = '衛星底圖';

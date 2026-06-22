@@ -307,7 +307,8 @@ export function initScene(canvas, bridgeTarget) {
   scene.add(sun);
 
   // 地形
-  scene.add(createTerrainMesh());
+  const terrainMesh = createTerrainMesh();
+  scene.add(terrainMesh);
   scene.add(createSeaPlane());
 
   // 建物
@@ -325,5 +326,5 @@ export function initScene(canvas, bridgeTarget) {
     createRoadRibbon(road.points, 13, 0x6b7682, scene);
   }
 
-  return { scene, camera, renderer, decorGroup, buildingMeshes };
+  return { scene, camera, renderer, decorGroup, buildingMeshes, terrainMesh };
 }

@@ -1,6 +1,7 @@
 /**
- * 衛星底圖貼地模組
- * 嘗試載入 Esri 空照 / OSM 圖磚，貼合到 3D 場景地面
+ * 衛星底圖模組
+ * 將衛星圖磚拼接後作為地形網格的貼圖，取代頂點色彩
+ * 這樣底圖會完整貼合地形起伏，不會出現補丁效果
  */
 import { MINGYU_LAT, MINGYU_LNG, METERS_PER_LAT, METERS_PER_LNG } from './constants.js';
 
@@ -31,47 +32,51 @@ function loadTile(source, zoom, tileX, tileY, timeoutMs = 10000) {
 }
 
 /**
- * 嘗試載入衛星底圖並建立貼地 mesh
- * @param {THREE.Scene} scene
- * @param {THREE.Group} decorGroup - 裝飾群組（載入底圖時隱藏）
- * @param {function} onStatus - 狀態回呼 (text)
- * @returns {THREE.Mesh|null} 已建立的 mesh，或 null 表示失敗
+ * 載入衛星底圖並貼合到地形 mesh 上
+ * @param {THREE.Mesh} terrainMesh - 地形網格 mesh（第一個加入 scene 的大型 mesh）
+ * @param {function} onStatus - 狀態回呼
+ * @returns {{ texture, originalMaterial }|null}
  */
-export async function loadSatelliteGround(scene, decorGroup, onStatus) {
-  const ZOOM = 14;  // 降一級zoom = 每 tile 涵蓋更大範圍，減少請求數
+export async function loadSatelliteGround(terrainMesh, onStatus) {
+  const ZOOM = 14;
   const TILE_COUNT = Math.pow(2, ZOOM);
   const TILE_SIZE = 256;
 
-  // 擴大涵蓋範圍：整個視線可見近景（社子島全域/基隆河/淡水河/關渡平原/開發區）
-  const EAST_WEST = -12000, EAST_EAST = 3000, NORTH_SOUTH = -4000, NORTH_NORTH = 9000;
-  const latNW = MINGYU_LAT + NORTH_NORTH / METERS_PER_LAT;
-  const lonNW = MINGYU_LNG + EAST_WEST / METERS_PER_LNG;
-  const latSE = MINGYU_LAT + NORTH_SOUTH / METERS_PER_LAT;
-  const lonSE = MINGYU_LNG + EAST_EAST / METERS_PER_LNG;
+  // 地形網格的世界範圍（對應 scene.js 中的 EAST_MIN/MAX, NORTH_MIN/MAX）
+  const EAST_MIN = -16000, EAST_MAX = 3000;
+  const NORTH_MIN = -4000, NORTH_MAX = 15000;
 
-  // Web Mercator 轉換
+  // 轉為經緯度
+  const latSouth = MINGYU_LAT + NORTH_MIN / METERS_PER_LAT;
+  const latNorth = MINGYU_LAT + NORTH_MAX / METERS_PER_LAT;
+  const lonWest = MINGYU_LNG + EAST_MIN / METERS_PER_LNG;
+  const lonEast = MINGYU_LNG + EAST_MAX / METERS_PER_LNG;
+
+  // Web Mercator tile 座標
   const lonToTileX = (lon) => Math.floor((lon + 180) / 360 * TILE_COUNT);
   const latToTileY = (lat) => Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * TILE_COUNT);
   const tileXToLon = (x) => x / TILE_COUNT * 360 - 180;
   const tileYToLat = (y) => { const a = Math.PI - 2 * Math.PI * y / TILE_COUNT; return 180 / Math.PI * Math.atan(0.5 * (Math.exp(a) - Math.exp(-a))); };
 
-  const xMin = lonToTileX(lonNW), xMax = lonToTileX(lonSE);
-  const yMin = latToTileY(latNW), yMax = latToTileY(latSE);
+  const xMin = lonToTileX(lonWest), xMax = lonToTileX(lonEast);
+  const yMin = latToTileY(latNorth), yMax = latToTileY(latSouth);
   const cols = xMax - xMin + 1, rows = yMax - yMin + 1;
 
-  if (cols < 1 || rows < 1 || cols * rows > 150) {
-    onStatus('範圍異常');
+  if (cols < 1 || rows < 1 || cols * rows > 200) {
+    onStatus('範圍異常 (' + cols + '×' + rows + ')');
     return null;
   }
 
   for (const source of TILE_SOURCES) {
-    onStatus('載入中…' + source.name);
+    onStatus('載入中…' + source.name + ' (' + cols * rows + ' tiles)');
+
     const canvas = document.createElement('canvas');
     canvas.width = cols * TILE_SIZE;
     canvas.height = rows * TILE_SIZE;
     const ctx = canvas.getContext('2d');
     let successCount = 0;
 
+    // 並行載入所有 tiles
     const jobs = [];
     for (let ty = yMin; ty <= yMax; ty++) {
       for (let tx = xMin; tx <= xMax; tx++) {
@@ -92,39 +97,56 @@ export async function loadSatelliteGround(scene, decorGroup, onStatus) {
     // CORS 驗證
     try { ctx.getImageData(0, 0, 1, 1); } catch (e) { continue; }
 
-    // 計算地理範圍對應場景座標
-    const geoWest = tileXToLon(xMin), geoEast = tileXToLon(xMax + 1);
-    const geoNorth = tileYToLat(yMin), geoSouth = tileYToLat(yMax + 1);
+    // 計算 tile 覆蓋的地理範圍
+    const geoWest = tileXToLon(xMin);
+    const geoEast = tileXToLon(xMax + 1);
+    const geoNorth = tileYToLat(yMin);
+    const geoSouth = tileYToLat(yMax + 1);
+
+    // 轉為場景座標
     const sceneWest = (geoWest - MINGYU_LNG) * METERS_PER_LNG;
     const sceneEast = (geoEast - MINGYU_LNG) * METERS_PER_LNG;
     const sceneNorth = (geoNorth - MINGYU_LAT) * METERS_PER_LAT;
     const sceneSouth = (geoSouth - MINGYU_LAT) * METERS_PER_LAT;
 
+    // 計算 UV 映射：地形網格頂點對應到貼圖的 UV
+    // 地形 mesh position: x = easting, z = -northing
+    // UV: u = (easting - sceneWest) / (sceneEast - sceneWest)
+    //     v = 1 - (northing - sceneSouth) / (sceneNorth - sceneSouth)
+    //       = 1 - (-z - sceneSouth) / (sceneNorth - sceneSouth)
+    const geometry = terrainMesh.geometry;
+    const posAttr = geometry.getAttribute('position');
+    const uvs = new Float32Array(posAttr.count * 2);
+
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = posAttr.getX(i);  // easting
+      const z = posAttr.getZ(i);  // -northing
+      const northing = -z;
+
+      uvs[i * 2] = (x - sceneWest) / (sceneEast - sceneWest);
+      uvs[i * 2 + 1] = 1.0 - (northing - sceneSouth) / (sceneNorth - sceneSouth);
+    }
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+
+    // 建立貼圖
     const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
     if (THREE.SRGBColorSpace !== undefined) {
       texture.colorSpace = THREE.SRGBColorSpace;
     } else if (THREE.sRGBEncoding !== undefined) {
       texture.encoding = THREE.sRGBEncoding;
     }
 
-    // 使用不受光源影響的材質 + 提亮，避免衛星底圖顏色偏暗
-    const material = new THREE.MeshBasicMaterial({
+    // 保存原始材質，切換為貼圖材質
+    const originalMaterial = terrainMesh.material;
+    terrainMesh.material = new THREE.MeshBasicMaterial({
       map: texture,
-      color: 0xffffff,
-      toneMapped: false
+      fog: true
     });
 
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(sceneEast - sceneWest, sceneNorth - sceneSouth),
-      material
-    );
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set((sceneWest + sceneEast) / 2, 4.8, -(sceneSouth + sceneNorth) / 2);
-    scene.add(mesh);
-    decorGroup.visible = false;
-
-    onStatus(source.name + '✓(' + successCount + ')');
-    return mesh;
+    onStatus(source.name + '✓(' + successCount + '/' + cols * rows + ')');
+    return { texture, originalMaterial };
   }
 
   onStatus('衛星底圖');
@@ -132,12 +154,12 @@ export async function loadSatelliteGround(scene, decorGroup, onStatus) {
 }
 
 /**
- * 移除衛星底圖 mesh 並恢復裝飾圖層
+ * 移除衛星底圖，恢復原始地形頂點色材質
  */
-export function removeSatelliteGround(mesh, scene, decorGroup) {
-  scene.remove(mesh);
-  if (mesh.material.map) mesh.material.map.dispose();
-  mesh.material.dispose();
-  mesh.geometry.dispose();
-  decorGroup.visible = true;
+export function removeSatelliteGround(terrainMesh, satData) {
+  if (satData.texture) satData.texture.dispose();
+  if (terrainMesh.material !== satData.originalMaterial) {
+    terrainMesh.material.dispose();
+  }
+  terrainMesh.material = satData.originalMaterial;
 }

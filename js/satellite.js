@@ -152,10 +152,10 @@ export async function loadSatelliteGround(terrainMesh, onStatus) {
     texture.wrapS = THREE.ClampToEdgeWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
 
-    // Clipping plane：只渲染 Y > 2 的片段
-    // 海域頂點在 Y=-10，陸地最低在 Y=4（GROUND_ELEVATION）
-    // 設 clip 在 Y=2 可以完全切掉所有海域過渡面
-    const seaClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -2);
+    // Clipping plane：只渲染 Y > 0.5 的片段
+    // 海面平面在 Y=0.1，海域頂點在 Y=-10
+    // 設 clip 在 Y=0.5 確保衛星圖貼近地面(Y=4)，同時切掉海域過渡面
+    const seaClipPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.5);
 
     const originalMaterial = terrainMesh.material;
     const satMaterial = new THREE.MeshBasicMaterial({

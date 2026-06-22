@@ -1,0 +1,228 @@
+/* ============================================================
+   遠雄明玥 視線模擬 — 主要樣式表
+   ============================================================ */
+
+:root {
+  --bg: #0b1418;
+  --panel: rgba(10, 20, 24, .84);
+  --line: #1f3640;
+  --ink: #e9f1f0;
+  --dim: #8aa4a8;
+  --amber: #ffb454;
+  --cyan: #46b6d6;
+  --ok: #5fd08a;
+  --no: #ff6b6b;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; height: 100%;
+  background: var(--bg); color: var(--ink); font-family: var(--sans);
+  overflow: hidden; overscroll-behavior: none;
+}
+
+/* === 降級提示 === */
+#fallback-message {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg); color: var(--ink);
+  padding: 40px; text-align: center;
+  font-family: var(--sans); font-size: 16px;
+  flex-direction: column; justify-content: center; align-items: center;
+}
+#fallback-message h2 { color: var(--amber); margin-bottom: 16px; }
+#fallback-message p { max-width: 500px; line-height: 1.6; color: var(--dim); }
+
+/* === 載入畫面 === */
+#loading-screen {
+  position: fixed; inset: 0; z-index: 9998;
+  background: var(--bg);
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  transition: opacity 0.5s;
+}
+#loading-screen.hidden { opacity: 0; pointer-events: none; }
+#loading-screen .spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--line); border-top-color: var(--amber);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+#loading-screen .text {
+  margin-top: 16px; font-family: var(--mono); font-size: 12px; color: var(--dim);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* === Canvas 場景 === */
+#scene { position: fixed; inset: 0; touch-action: none; }
+
+/* === 2D 地圖 === */
+#map2d { position: fixed; inset: 0; z-index: 2; display: none; background: #0b1418; }
+.leaflet-top.leaflet-right { margin-top: 60px; }
+.leaflet-container { background: #0b1418; font-family: var(--sans); }
+.mlbl {
+  background: rgba(10, 20, 24, .82); color: #e9f1f0;
+  border: 1px solid #1f3640; border-radius: 3px;
+  font-family: var(--mono); font-size: 10px;
+  box-shadow: none; padding: 0 4px; white-space: nowrap;
+}
+.mlbl:before { display: none; }
+body.mapmode .lbl, body.mapmode #tiltwrap,
+body.mapmode #hint, body.mapmode #compass { display: none !important; }
+
+/* === 頂部標題 === */
+#top {
+  position: fixed; top: 0; left: 0; right: 0; padding: 10px 12px;
+  background: linear-gradient(#0b1418cc, #0b141800);
+  pointer-events: none; z-index: 5;
+}
+#top .eyebrow {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: .22em; color: var(--amber); text-transform: uppercase;
+}
+#top h1 { margin: 1px 0 0; font-size: 15px; font-weight: 600; }
+#top .sub { font-family: var(--mono); font-size: 10.5px; color: var(--dim); margin-top: 2px; }
+
+/* === 羅盤 === */
+#compass {
+  position: fixed; top: 10px; right: 12px; z-index: 6;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 6px 9px; text-align: center;
+  backdrop-filter: blur(8px); min-width: 74px;
+}
+#compass .h { font-family: var(--mono); font-size: 18px; font-weight: 600; color: var(--amber); }
+#compass .l { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: .1em; }
+
+/* === 3D 標籤 === */
+.lbl {
+  position: fixed; transform: translate(-50%, -100%); z-index: 4;
+  pointer-events: none; font-family: var(--mono); font-size: 10px;
+  white-space: nowrap; padding: 1px 5px; border-radius: 4px;
+  background: #06101388; border: 1px solid #ffffff22;
+  color: #dfeef0; text-shadow: 0 1px 2px #000;
+}
+.lbl::after {
+  content: ""; position: absolute; left: 50%; top: 100%;
+  width: 1px; height: 8px; background: #ffffff55; transform: translateX(-50%);
+}
+.lbl.water { color: var(--cyan); border-color: #46b6d655; }
+.lbl.peak { color: #e7d3a6; }
+.lbl.flat { color: #bcd39a; border-color: #bcd39a44; }
+.lbl.bld { color: #ffb38a; border-color: #ffb38a66; }
+.lbl.road { color: #aeb6bf; border-color: #aeb6bf55; font-size: 11px; }
+
+/* === 底部面板 === */
+#panel {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
+  background: var(--panel); border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  padding: 11px 13px calc(11px + env(safe-area-inset-bottom));
+}
+
+/* 視線狀態卡片 */
+.vis { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 11px; }
+.chip {
+  flex: 1 1 30%; min-width: 96px;
+  border: 1px solid var(--line); border-radius: 9px;
+  padding: 7px 9px; background: #0a161a;
+}
+.chip .k { font-size: 10.5px; color: var(--dim); margin-bottom: 3px; }
+.chip .v {
+  font-family: var(--mono); font-size: 12.5px; font-weight: 600;
+  display: flex; align-items: center; gap: 5px;
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.ok .dot { background: var(--ok); } .ok .v { color: var(--ok); }
+.no .dot { background: var(--no); } .no .v { color: var(--no); }
+.chip .d { font-family: var(--mono); font-size: 9.5px; color: var(--dim); margin-top: 2px; }
+
+/* 樓層控制列 */
+.srow { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 5px; }
+.srow .fl { font-family: var(--mono); font-size: 13px; }
+.srow .fl b { font-size: 21px; color: var(--amber); font-weight: 700; }
+.srow .ht { font-family: var(--mono); font-size: 11px; color: var(--dim); }
+.srow .tag {
+  font-family: var(--mono); font-size: 9.5px;
+  padding: 1px 6px; border-radius: 5px;
+  border: 1px solid var(--line); color: var(--dim);
+}
+.srow .tag.real { color: var(--cyan); border-color: #46b6d655; }
+.srow .tag.hyp { color: var(--amber); border-color: #ffb45455; }
+
+/* 滑桿 */
+.track { position: relative; height: 30px; }
+input[type=range] { -webkit-appearance: none; width: 100%; height: 30px; background: transparent; margin: 0; }
+input[type=range]::-webkit-slider-runnable-track {
+  height: 5px; border-radius: 3px; background: linear-gradient(90deg, #2b4a54, #46b6d6);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8.5px;
+  border-radius: 50%; background: var(--amber); border: 3px solid #0b1418; box-shadow: 0 1px 4px #000;
+}
+input[type=range]::-moz-range-thumb {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--amber); border: 3px solid #0b1418;
+}
+.marks { position: relative; height: 13px; margin-top: 1px; font-family: var(--mono); font-size: 8.5px; color: var(--dim); }
+.mk { position: absolute; transform: translateX(-50%); text-align: center; white-space: nowrap; }
+.mk i { display: block; width: 1px; height: 5px; background: #ffffff44; margin: 0 auto 1px; }
+.mk.sea i { background: var(--amber); } .mk.sea { color: var(--amber); }
+.mk.real i { background: var(--cyan); } .mk.real { color: var(--cyan); }
+
+/* 按鈕列 */
+.btns { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+button {
+  flex: 1 1 28%; font-family: var(--mono); font-size: 11px;
+  color: var(--ink); background: #0e1e23;
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 8px 4px; cursor: pointer;
+}
+button:active { background: #16323a; }
+button.on { border-color: var(--amber); color: var(--amber); }
+
+.foot {
+  font-family: var(--mono); font-size: 9px;
+  color: #5f7478; margin-top: 8px; line-height: 1.5;
+}
+
+/* === 剖面圖面板 === */
+#xsec {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 7;
+  background: #070f12f2; border-top: 1px solid var(--amber);
+  transform: translateY(101%); transition: transform .28s ease;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+}
+#xsec.show { transform: translateY(0); }
+#xsec .hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+#xsec .hd .t { font-family: var(--mono); font-size: 11px; color: var(--amber); }
+#xsec .hd .x { font-family: var(--mono); font-size: 12px; color: var(--dim); cursor: pointer; padding: 4px 8px; }
+#xcanvas { width: 100%; height: 170px; display: block; border-radius: 6px; background: #0a1418; }
+#xsec .cap { font-family: var(--mono); font-size: 9.5px; color: var(--dim); margin-top: 5px; line-height: 1.45; }
+
+/* === 俯仰滑桿 === */
+#tiltwrap {
+  position: fixed; right: 4px; top: 50%; transform: translateY(-50%);
+  z-index: 1000; height: 188px; width: 40px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  pointer-events: none;
+}
+#tiltwrap .lab { font-family: var(--mono); font-size: 10px; color: #dfeef0; text-shadow: 0 1px 3px #000; }
+#tilt {
+  pointer-events: auto; -webkit-appearance: none; appearance: none;
+  width: 150px; height: 30px; transform: rotate(-90deg); background: transparent;
+}
+#tilt::-webkit-slider-runnable-track { height: 5px; border-radius: 3px; background: linear-gradient(90deg, #2b4a54, #46b6d6); }
+#tilt::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 26px; height: 26px; margin-top: -10.5px;
+  border-radius: 50%; background: #46b6d6; border: 3px solid #0b1418; box-shadow: 0 1px 4px #000;
+}
+#tilt::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: #46b6d6; border: 3px solid #0b1418; }
+
+/* === 操作提示 === */
+#hint {
+  position: fixed; left: 50%; top: 46%; transform: translateX(-50%); z-index: 3;
+  font-family: var(--mono); font-size: 11px; color: #ffffffcc;
+  background: #0009; padding: 5px 11px; border-radius: 14px;
+  pointer-events: none; transition: opacity .5s; text-align: center;
+}

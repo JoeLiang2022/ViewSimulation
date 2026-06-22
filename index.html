@@ -2,128 +2,89 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>遠雄明玥 · 西北向視線模擬 v2</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<style>
-  #map2d{position:fixed;inset:0;z-index:2;display:none;background:#0b1418}
-  .leaflet-top.leaflet-right{margin-top:60px}
-  .leaflet-container{background:#0b1418;font-family:var(--sans)}
-  .mlbl{background:rgba(10,20,24,.82);color:#e9f1f0;border:1px solid #1f3640;border-radius:3px;font-family:var(--mono);font-size:10px;box-shadow:none;padding:0 4px;white-space:nowrap}
-  .mlbl:before{display:none}
-  body.mapmode .lbl,body.mapmode #tiltwrap,body.mapmode #hint,body.mapmode #compass{display:none!important}
-
-  :root{--bg:#0b1418;--panel:rgba(10,20,24,.84);--line:#1f3640;--ink:#e9f1f0;--dim:#8aa4a8;
-    --amber:#ffb454;--cyan:#46b6d6;--ok:#5fd08a;--no:#ff6b6b;
-    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-    --sans:-apple-system,"PingFang TC","Noto Sans TC",system-ui,sans-serif;}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);
-    overflow:hidden;overscroll-behavior:none}
-  #scene{position:fixed;inset:0;touch-action:none}
-  #top{position:fixed;top:0;left:0;right:0;padding:10px 12px;
-    background:linear-gradient(#0b1418cc,#0b141800);pointer-events:none;z-index:5}
-  #top .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--amber);text-transform:uppercase}
-  #top h1{margin:1px 0 0;font-size:15px;font-weight:600}
-  #top .sub{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:2px}
-  #compass{position:fixed;top:10px;right:12px;z-index:6;background:var(--panel);border:1px solid var(--line);
-    border-radius:10px;padding:6px 9px;text-align:center;backdrop-filter:blur(8px);min-width:74px}
-  #compass .h{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--amber)}
-  #compass .l{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.1em}
-  .lbl{position:fixed;transform:translate(-50%,-100%);z-index:4;pointer-events:none;font-family:var(--mono);
-    font-size:10px;white-space:nowrap;padding:1px 5px;border-radius:4px;background:#06101388;
-    border:1px solid #ffffff22;color:#dfeef0;text-shadow:0 1px 2px #000}
-  .lbl::after{content:"";position:absolute;left:50%;top:100%;width:1px;height:8px;background:#ffffff55;transform:translateX(-50%)}
-  .lbl.water{color:var(--cyan);border-color:#46b6d655}
-  .lbl.peak{color:#e7d3a6}
-  .lbl.flat{color:#bcd39a;border-color:#bcd39a44}
-  .lbl.bld{color:#ffb38a;border-color:#ffb38a66}
-  .lbl.road{color:#aeb6bf;border-color:#aeb6bf55;font-size:11px}
-  #panel{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);
-    backdrop-filter:blur(10px);padding:11px 13px calc(11px + env(safe-area-inset-bottom))}
-  .vis{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}
-  .chip{flex:1 1 30%;min-width:96px;border:1px solid var(--line);border-radius:9px;padding:7px 9px;background:#0a161a}
-  .chip .k{font-size:10.5px;color:var(--dim);margin-bottom:3px}
-  .chip .v{font-family:var(--mono);font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:5px}
-  .dot{width:7px;height:7px;border-radius:50%;flex:none}
-  .ok .dot{background:var(--ok)} .ok .v{color:var(--ok)}
-  .no .dot{background:var(--no)} .no .v{color:var(--no)}
-  .chip .d{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:2px}
-  .srow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px}
-  .srow .fl{font-family:var(--mono);font-size:13px}
-  .srow .fl b{font-size:21px;color:var(--amber);font-weight:700}
-  .srow .ht{font-family:var(--mono);font-size:11px;color:var(--dim)}
-  .srow .tag{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-radius:5px;border:1px solid var(--line);color:var(--dim)}
-  .srow .tag.real{color:var(--cyan);border-color:#46b6d655}
-  .srow .tag.hyp{color:var(--amber);border-color:#ffb45455}
-  .track{position:relative;height:30px}
-  input[type=range]{-webkit-appearance:none;width:100%;height:30px;background:transparent;margin:0}
-  input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(90deg,#2b4a54,#46b6d6)}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8.5px;border-radius:50%;
-    background:var(--amber);border:3px solid #0b1418;box-shadow:0 1px 4px #000}
-  input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--amber);border:3px solid #0b1418}
-  .marks{position:relative;height:13px;margin-top:1px;font-family:var(--mono);font-size:8.5px;color:var(--dim)}
-  .mk{position:absolute;transform:translateX(-50%);text-align:center;white-space:nowrap}
-  .mk i{display:block;width:1px;height:5px;background:#ffffff44;margin:0 auto 1px}
-  .mk.sea i{background:var(--amber)} .mk.sea{color:var(--amber)}
-  .mk.real i{background:var(--cyan)} .mk.real{color:var(--cyan)}
-  .btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
-  button{flex:1 1 28%;font-family:var(--mono);font-size:11px;color:var(--ink);background:#0e1e23;border:1px solid var(--line);
-    border-radius:8px;padding:8px 4px;cursor:pointer}
-  button:active{background:#16323a}
-  button.on{border-color:var(--amber);color:var(--amber)}
-  .foot{font-family:var(--mono);font-size:9px;color:#5f7478;margin-top:8px;line-height:1.5}
-  #xsec{position:fixed;left:0;right:0;bottom:0;z-index:7;background:#070f12f2;border-top:1px solid var(--amber);
-    transform:translateY(101%);transition:transform .28s ease;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
-  #xsec.show{transform:translateY(0)}
-  #xsec .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-  #xsec .hd .t{font-family:var(--mono);font-size:11px;color:var(--amber)}
-  #xsec .hd .x{font-family:var(--mono);font-size:12px;color:var(--dim);cursor:pointer;padding:4px 8px}
-  #xcanvas{width:100%;height:170px;display:block;border-radius:6px;background:#0a1418}
-  #xsec .cap{font-family:var(--mono);font-size:9.5px;color:var(--dim);margin-top:5px;line-height:1.45}
-  #tiltwrap{position:fixed;right:4px;top:50%;transform:translateY(-50%);z-index:1000;height:188px;width:40px;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;pointer-events:none}
-  #tiltwrap .lab{font-family:var(--mono);font-size:10px;color:#dfeef0;text-shadow:0 1px 3px #000}
-  #tilt{pointer-events:auto;-webkit-appearance:none;appearance:none;width:150px;height:30px;transform:rotate(-90deg);background:transparent}
-  #tilt::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(90deg,#2b4a54,#46b6d6)}
-  #tilt::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-10.5px;border-radius:50%;
-    background:#46b6d6;border:3px solid #0b1418;box-shadow:0 1px 4px #000}
-  #tilt::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#46b6d6;border:3px solid #0b1418}
-  #hint{position:fixed;left:50%;top:46%;transform:translateX(-50%);z-index:3;font-family:var(--mono);font-size:11px;
-    color:#ffffffcc;background:#0009;padding:5px 11px;border-radius:14px;pointer-events:none;transition:opacity .5s;text-align:center}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>遠雄明玥 · 西北向視線模擬</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+      onerror="console.warn('Leaflet CSS 載入失敗，2D地圖功能可能受限')"/>
 </head>
 <body>
+
+<!-- 降級提示（WebGL 不支援時顯示） -->
+<div id="fallback-message">
+  <h2>⚠️ 瀏覽器不支援 WebGL</h2>
+  <p>此視線模擬工具需要 WebGL 支援才能運作。<br>
+     請使用最新版 Chrome、Firefox、Safari 或 Edge 開啟。<br>
+     若為行動裝置，請確認未開啟「省電模式」。</p>
+</div>
+
+<!-- 載入畫面 -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div class="text">載入 3D 場景中…</div>
+</div>
+
+<!-- 3D Canvas -->
 <canvas id="scene"></canvas>
+
+<!-- 2D 地圖容器 -->
 <div id="map2d"></div>
+
+<!-- 頂部標題 -->
 <div id="top">
-  <div class="eyebrow">SIGHTLINE SURVEY v54 · 鏡頭縮放+多視點</div>
+  <div class="eyebrow">SIGHTLINE SURVEY · 鏡頭縮放+多視點</div>
   <h1 id="titleH">視點:遠雄明玥 → 全分區建築</h1>
   <div class="sub">相機=基地實座標 · 地形/水系=實測 · 1:1 無垂直誇張</div>
 </div>
-<div id="compass"><div class="h" id="cHead">--°</div><div class="l" id="cName">方位</div><div class="l" id="cZoom" style="color:var(--amber)">×1.0</div></div>
-<div id="tiltwrap"><div class="lab">仰</div>
-  <input id="tilt" type="range" min="-1.30" max="0.80" step="0.01" value="-0.04">
-  <div class="lab">俯</div></div>
-<div id="hint">拖曳可上下左右環顧(往下拖也行) · 右側桿亦可俯仰 · 下方桿改樓層</div>
 
+<!-- 羅盤 -->
+<div id="compass">
+  <div class="h" id="cHead">--°</div>
+  <div class="l" id="cName">方位</div>
+  <div class="l" id="cZoom" style="color:var(--amber)">×1.0</div>
+</div>
+
+<!-- 俯仰滑桿 -->
+<div id="tiltwrap">
+  <div class="lab">仰</div>
+  <input id="tilt" type="range" min="-1.30" max="0.80" step="0.01" value="-0.04"
+         aria-label="俯仰角度控制">
+  <div class="lab">俯</div>
+</div>
+
+<!-- 操作提示 -->
+<div id="hint">拖曳可上下左右環顧 · 右側桿亦可俯仰 · 下方桿改樓層</div>
+
+<!-- 底部控制面板 -->
 <div id="panel">
   <div class="vis">
-    <div class="chip" id="chSea"><div class="k">淡水出海口 / 海平面</div>
-      <div class="v"><span class="dot"></span><span class="t">—</span></div><div class="d" id="dSea"></div></div>
-    <div class="chip" id="chBridge"><div class="k">淡江大橋 塔頂 211m</div>
-      <div class="v"><span class="dot"></span><span class="t">—</span></div><div class="d" id="dBridge"></div></div>
-    <div class="chip" id="chRiver"><div class="k">基隆河 / 關渡平原</div>
-      <div class="v"><span class="dot"></span><span class="t">—</span></div><div class="d" id="dRiver"></div></div>
+    <div class="chip" id="chSea">
+      <div class="k">淡水出海口 / 海平面</div>
+      <div class="v"><span class="dot"></span><span class="t">—</span></div>
+      <div class="d" id="dSea"></div>
+    </div>
+    <div class="chip" id="chBridge">
+      <div class="k">淡江大橋 塔頂 211m</div>
+      <div class="v"><span class="dot"></span><span class="t">—</span></div>
+      <div class="d" id="dBridge"></div>
+    </div>
+    <div class="chip" id="chRiver">
+      <div class="k">基隆河 / 關渡平原</div>
+      <div class="v"><span class="dot"></span><span class="t">—</span></div>
+      <div class="d" id="dRiver"></div>
+    </div>
   </div>
+
   <div class="srow">
     <div class="fl">第 <b id="flN">23</b> 樓 <span class="tag" id="flTag">本案最高</span></div>
     <div class="ht">視線高度 <b id="htV" style="color:var(--amber)">—</b> m</div>
   </div>
-  <div class="track"><input id="floor" type="range" min="1" max="110" value="23"></div>
+  <div class="track">
+    <input id="floor" type="range" min="1" max="110" value="23"
+           aria-label="樓層選擇" aria-valuemin="1" aria-valuemax="110">
+  </div>
   <div class="marks" id="marks"></div>
+
   <div class="btns">
     <button id="bSea">看出海口</button>
     <button id="bBridge">看淡江大橋</button>
@@ -134,463 +95,40 @@
     <button id="b2d">2D鳥瞰</button>
     <button id="bsat">衛星底圖</button>
   </div>
-  <div class="foot">建物位置依你提供的新洲美段都市計畫配置圖定位:泱玥(24F)在西南、距南側河岸約87m、洲美國小(5F低)在正西、市民住宅(中層)在西北壓在出海口線上。
-    出海口被北藝大 150m 稜線遮蔽、需 ~78F 的結論穩健;淡江大橋屬邊際值,精確以 DEM/實景為準。</div>
+
+  <div class="foot">
+    建物位置依新洲美段都市計畫配置圖定位。
+    出海口被北藝大 150m 稜線遮蔽、需 ~78F 的結論穩健；淡江大橋屬邊際值，精確以 DEM/實景為準。
+  </div>
 </div>
 
+<!-- 剖面圖面板 -->
 <div id="xsec">
-  <div class="hd"><div class="t">沿方位 307.6° 視線剖面(往淡水出海口)</div><div class="x" id="xClose">關閉 ✕</div></div>
+  <div class="hd">
+    <div class="t">沿方位 307.6° 視線剖面（往淡水出海口）</div>
+    <div class="x" id="xClose">關閉 ✕</div>
+  </div>
   <canvas id="xcanvas"></canvas>
   <div class="cap" id="xcap"></div>
 </div>
 
+<!-- 外部依賴（含錯誤處理） -->
 <script>
-const R=6371000,K=0.13,REFF=R/(1-K),GROUND=4;
-const SEA=[-10700,8240,0], BRIDGE=[-9353,5400,211], RIVER=[-3000,1050,0];
-const PEAKS=[
-  {e:-4550,n:3400,A:138,s:780},{e:-7975,n:3222,A:291,s:1100},
-  {e:-8676,n:2390,A:612,s:1400},{e:2500,n:10500,A:1086,s:2400},{e:-12500,n:-3000,A:180,s:3500}];
-// 水系(座標=洲美原點,東x/北z 公尺;依兩河交會、社子島鴨嘴實際相對位置)
-const BANK=[[-621,455],[-586,55],[-240,-114],[409,-205],[699,-65],[1421,160]]; // Joe衛星描:基隆河北岸(由西到東)
-const KEELUNG=[[-621,455],[-1000,720],[-1500,1050],[-2200,1350],[-3400,1600]]; // 北岸西端往西北接淡水河 // 基隆河(河彎弧度:泱玥附近即往西北繞) // 基隆河(北岸貼近泱玥南緣,距泱玥~87m) // 基隆河(建築群南側/西側,北岸是建地)
-const TAMSUI=[[-3600,-2400],[-4100,-500],[-4640,1110],[-5340,1550],[-6400,2800],[-7700,4300],[-9000,5800],[-9900,7000],[-10700,8240]]; // 淡水河
-// 鄰近洲美段建物量體(box遮蔽)。位置=依建案文宣推估,待校正;e,n=中心(公尺,明玥為原點 東x/北z),fl=地上樓層
-const BUILDINGS=[
-  {name:'遠雄明玥 27F', e:0, n:0, w:36, d:36, fl:27, color:0x70788a, obs:true},
-  {name:'遠雄泱玥 24F', e:-118, n:-20, w:32, d:28, fl:24, color:0xb4673c, obs:true},
-  {name:'河岸建案 河岸第一排(未定)', e:30, n:-72, w:42, d:30, fl:15, color:0x36c9b8, ghost:true},
-  {name:'潤泰新洲美 22F', e:-229, n:38, w:30, d:28, fl:22, color:0x7e8a9c, vp:true},
-  {name:'達麗河蘊A 14F', e:62, n:62, w:28, d:26, fl:14, color:0x49565f, vp:true},
-  {name:'達麗河蘊B 14F', e:17, n:64, w:28, d:26, fl:14, color:0x49565f},
-  {name:'國際羽球館', e:-288, n:162, w:92, d:78, fl:5, color:0x6f93a8},
-  {name:'洲美國中小', e:-140, n:176, w:120, d:20, fl:5, color:0xcabfa3},
-  {name:'洲美國中小', e:-198, n:120, w:22, d:96, fl:5, color:0xcabfa3},
-  {name:'住宅 住3-2 15F', e:-209, n:256, w:36, d:32, fl:15, color:0x7a86a8, vp:true},
-  {name:'住宅 住3-2 15F', e:-245, n:250, w:30, d:30, fl:15, color:0x7a86a8},
-  {name:'住宅 住3-2 15F', e:-173, n:251, w:30, d:30, fl:15, color:0x7a86a8},
-  {name:'住宅 住3-2 15F', e:-209, n:299, w:36, d:30, fl:15, color:0x7a86a8},
-  {name:'洲美公宅A 15F', e:-1, n:193, w:34, d:30, fl:15, color:0x8a6f9c, vp:true},
-  {name:'洲美公宅A 15F', e:-14, n:274, w:34, d:30, fl:15, color:0x8a6f9c},
-  {name:'洲美公宅B 15F', e:59, n:246, w:34, d:30, fl:15, color:0x8a6f9c},
-  {name:'洲美公宅B 15F', e:-7, n:244, w:34, d:30, fl:15, color:0x8a6f9c},
-  {name:'洲美公宅C 15F', e:145, n:251, w:34, d:30, fl:15, color:0x9a7fac},
-  {name:'洲美公宅C 15F', e:82, n:197, w:34, d:30, fl:15, color:0x9a7fac},
-  {name:'洲美公宅C 15F', e:59, n:272, w:34, d:30, fl:15, color:0x9a7fac},
-  {name:'洲美公宅C 15F', e:146, n:275, w:34, d:30, fl:15, color:0x9a7fac},
-  {name:'洲美公宅D 15F', e:203, n:255, w:34, d:30, fl:15, color:0x8a6f9c},
-  {name:'洲美公宅D 15F', e:285, n:251, w:34, d:30, fl:15, color:0x8a6f9c},
-  {name:'洲美公宅D 15F', e:210, n:281, w:34, d:30, fl:15, color:0x8a6f9c},
-  {name:'洲美公宅D 15F', e:287, n:278, w:34, d:30, fl:15, color:0x8a6f9c},
-  {name:'士科大院A 22F(南)', e:167, n:-2, w:38, d:40, fl:22, color:0x6f7e92, vp:true},
-  {name:'士科大院B 22F(北)', e:164, n:60, w:38, d:40, fl:22, color:0x6f7e92},
-  {name:'科專 ~18F', e:232, n:72, w:42, d:38, fl:18, color:0xc98a4a},
-  {name:'科專 ~18F', e:230, n:19, w:42, d:38, fl:18, color:0xc98a4a},
-  {name:'科專 ~18F', e:334, n:70, w:42, d:38, fl:18, color:0xc98a4a},
-  {name:'科專 ~18F', e:339, n:4, w:42, d:38, fl:18, color:0xc98a4a},
-  {name:'科專 ~18F', e:299, n:-66, w:42, d:38, fl:18, color:0xc98a4a},
-  {name:'平面停車場 交', e:-464, n:165, w:80, d:110, fl:1, color:0x9a9a9a}
-];
-const bldTop=b=>GROUND+b.fl*3.4;
-const inBld=(e,n,b)=>Math.abs(e-b.e)<=b.w/2 && Math.abs(n-b.n)<=b.d/2;
-const SHEZI=[[-4500,950],[-2900,250],[-1300,-650],[-700,-1900],[-1700,-2600],[-3100,-1700],[-4150,-300]]; // 社子島
-function dseg(px,pz,ax,az,bx,bz){const dx=bx-ax,dz=bz-az,L=dx*dx+dz*dz;
-  let t=L?((px-ax)*dx+(pz-az)*dz)/L:0;t=Math.max(0,Math.min(1,t));return Math.hypot(px-(ax+t*dx),pz-(az+t*dz));}
-function dpoly(px,pz,P){let m=1e9;for(let i=0;i<P.length-1;i++)m=Math.min(m,dseg(px,pz,P[i][0],P[i][1],P[i+1][0],P[i+1][1]));return m;}
-function inPoly(px,pz,P){let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){
-  const xi=P[i][0],yi=P[i][1],xj=P[j][0],yj=P[j][1];
-  if(((yi>pz)!=(yj>pz))&&(px<(xj-xi)*(pz-yi)/(yj-yi)+xi))c=!c;}return c;}
-function bankN(e){
-  if(e<=BANK[0][0]) return BANK[0][1];                 // 西端持平(避免外插爆出假河)
-  for(let i=0;i<BANK.length-1;i++){const a=BANK[i],b=BANK[i+1];if(e>=a[0]&&e<=b[0]){const t=(e-a[0])/(b[0]-a[0]);return a[1]+t*(b[1]-a[1]);}}
-  return BANK[BANK.length-1][1];                        // 東端持平
-}
-function heightAt(e,n){
-  if(e<-8200&&n>6600) return {h:0,t:'sea'};
-  if(dpoly(e,n,TAMSUI)<180) return {h:0,t:'river'}; // 淡水河 ~360m
-  if(e>-650 && e<1450){const rw=Math.min(300,150+Math.max(0,-e)*0.25); if(n<bankN(e)-6 && n>bankN(e)-rw) return {h:0,t:'river'};} // 基隆河 150~300m
-  if(dpoly(e,n,KEELUNG)<140) return {h:0,t:'river'}; // 西北接淡水河段 ~280m
-  if(inPoly(e,n,SHEZI)) return {h:2.5,t:'wet'};
-  let h=GROUND;for(const p of PEAKS)h+=p.A*Math.exp(-((e-p.e)**2+(n-p.n)**2)/(2*p.s*p.s));
-  return {h,t:'land'};
-}
-let OBSI=0;const OBS=()=>BUILDINGS[OBSI];
-const VP=BUILDINGS.map((b,i)=>i).filter(i=>BUILDINGS[i].obs||BUILDINGS[i].vp);
-function visible(t,ey){const o=OBS(),ox=o.e,oz=o.n,dx=t[0]-ox,dz=t[1]-oz,D=Math.hypot(dx,dz);
-  for(let r=12;r<D-10;r+=(r<900?12:40)){const f=r/D,px=ox+dx*f,pz=oz+dz*f,
-    s=ey+(t[2]-ey)*f-r*(D-r)/(2*REFF);
-    for(const b of BUILDINGS){if(b===o)continue;if(inBld(px,pz,b)&&bldTop(b)>s+0.5)return{ok:false,at:r,by:b.name};}
-    if(heightAt(px,pz).h>s+1)return{ok:false,at:r,by:'地形'};}
-  return{ok:true,at:D};}
-const flToEye=fl=>GROUND+fl*3.4;
-let SEA_FL=null;for(let fl=1;fl<=200;fl++)if(visible(SEA,flToEye(fl)).ok){SEA_FL=fl;break;}
-
-/* ===== three.js ===== */
-const cv=document.getElementById('scene');
-const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-const scene=new THREE.Scene();
-const decorGroup=new THREE.Group();scene.add(decorGroup);
-(function(){const c=document.createElement('canvas');c.width=2;c.height=256;
-  const ctx=c.getContext('2d');const g=ctx.createLinearGradient(0,0,0,256);
-  g.addColorStop(0,'#90a9bd');g.addColorStop(.45,'#c2d2da');g.addColorStop(.8,'#dde7ea');g.addColorStop(1,'#e8eef0');
-  ctx.fillStyle=g;ctx.fillRect(0,0,2,256);scene.background=new THREE.CanvasTexture(c);})();
-scene.fog=new THREE.Fog(0xccd8de,3200,15500);
-const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,1,42000);
-scene.add(new THREE.AmbientLight(0xffffff,.58));
-scene.add(new THREE.HemisphereLight(0xcdd9e0,0x6f7e54,.42));
-const sun=new THREE.DirectionalLight(0xf4f1ea,.5);sun.position.set(-6000,9000,3000);scene.add(sun);
-
-function colFor(h,t){const c=new THREE.Color();
-  if(t==='sea')  return c.setHex(0x52707f);
-  if(t==='river')return c.setHex(0x5d7886);
-  if(t==='wet')  return c.setHex(0x707a52);          // 社子島濕地:泥灘草澤
-  if(h<22)  c.setHex(0x6fa45a);
-  else if(h<120) c.lerpColors(new THREE.Color(0x6fa45a),new THREE.Color(0x95974f),(h-22)/98);
-  else if(h<320) c.lerpColors(new THREE.Color(0x95974f),new THREE.Color(0x9c8a5e),(h-120)/200);
-  else if(h<620) c.lerpColors(new THREE.Color(0x9c8a5e),new THREE.Color(0x8d7e6e),(h-320)/300);
-  else c.lerpColors(new THREE.Color(0x8d7e6e),new THREE.Color(0xc6bfb0),Math.min(1,(h-620)/500));
-  return c;}
-(function(){const xmin=-16000,xmax=3000,zmin=-4000,zmax=15000,NX=234,NZ=224;
-  const g=new THREE.BufferGeometry();const pos=[],col=[],idx=[];
-  for(let j=0;j<=NZ;j++)for(let i=0;i<=NX;i++){
-    const e=xmin+(xmax-xmin)*i/NX,n=zmin+(zmax-zmin)*j/NZ;const d=heightAt(e,n);
-    pos.push(e,d.h,-n);const c=colFor(d.h,d.t);col.push(c.r,c.g,c.b);}
-  const W=NX+1;for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const a=j*W+i,b=a+1,cc=a+W,dd=cc+1;idx.push(a,b,cc,b,dd,cc);}
-  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
-  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
-  g.setIndex(idx);g.computeVertexNormals();
-  scene.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({vertexColors:true})));})();
-(function(){const sea=new THREE.Mesh(new THREE.PlaneGeometry(44000,44000),
-  new THREE.MeshBasicMaterial({color:0x7e98a8}));sea.rotation.x=-Math.PI/2;sea.position.set(-13000,-0.25,-13000);scene.add(sea);})();
-
-/* 社子島低矮聚落(讓社子島像實景=密集低房,分隔基隆河/淡水河;裝飾) */
-(function(){const rng=(a,b)=>a+Math.random()*(b-a);
-  const mat=new THREE.MeshLambertMaterial({color:0x9aa488});
-  for(let k=0;k<60;k++){const e=rng(-3900,-900),n=rng(-2100,-200);
-    if(!inPoly(e,n,SHEZI)&&Math.random()<0.6) continue;
-    const h=rng(6,22),w=rng(22,46),d=rng(22,46);
-    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
-    m.position.set(e,h/2+2.5,-n);scene.add(m);}})();
-/* 遠方市區剪影(山腳·大氣霧中,裝飾) */
-(function(){const rng=(a,b)=>a+Math.random()*(b-a);
-  const mat=new THREE.MeshLambertMaterial({color:0xa7bac7});
-  const spots=[[-4600,4200,1700,1100],[-6200,5200,1900,1300],[-8000,5600,1700,1200],
-    [-9600,6200,1500,1100],[-5200,2600,1500,1000],[-7000,3400,1500,1100]];
-  spots.forEach(sp=>{const[ce,cn,we,wn]=sp;
-    for(let k=0;k<7;k++){const e=ce+rng(-we/2,we/2),n=cn+rng(-wn/2,wn/2);
-      const h=rng(16,52),w=rng(36,90),d=rng(36,90);
-      const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
-      m.position.set(e,h/2,-n);scene.add(m);}});})();
-/* 關渡大橋(紅拱) */
-(function(){const grp=new THREE.Group();const red=new THREE.MeshLambertMaterial({color:0xc0392b});
-  const deck=new THREE.Mesh(new THREE.BoxGeometry(720,9,26),red);deck.position.y=12;grp.add(deck);
-  const arch=new THREE.Mesh(new THREE.TorusGeometry(300,11,8,28,Math.PI),red);
-  arch.position.set(0,12,0);grp.add(arch);
-  grp.position.set(-5340,0,-1550);grp.rotation.y=0.86;scene.add(grp);})();
-/* 淡江大橋(白塔) */
-(function(){const grp=new THREE.Group();
-  const tower=new THREE.Mesh(new THREE.BoxGeometry(40,211,40),new THREE.MeshLambertMaterial({color:0xececf0}));
-  tower.position.set(BRIDGE[0],211/2,-BRIDGE[1]);grp.add(tower);
-  const deck=new THREE.Mesh(new THREE.BoxGeometry(1700,8,30),new THREE.MeshLambertMaterial({color:0xccd0d6}));
-  deck.position.set(BRIDGE[0]+250,18,-(BRIDGE[1]+340));deck.rotation.y=0.62;grp.add(deck);scene.add(grp);})();
-
-/* 鄰近建物量體 */
-const bmesh=[];
-(function(){for(let i=0;i<BUILDINGS.length;i++){const b=BUILDINGS[i],gh=b.ghost,top=bldTop(b);
-  const mat=gh?new THREE.MeshLambertMaterial({color:b.color,transparent:true,opacity:0.5})
-              :new THREE.MeshLambertMaterial({color:b.color});
-  const mesh=new THREE.Mesh(new THREE.BoxGeometry(b.w,top,b.d),mat);
-  mesh.position.set(b.e,top/2,-b.n);scene.add(mesh);bmesh.push(mesh);}
-  bmesh[OBSI].visible=false;})();
-/* 洲美國小:開闊校地(操場+跑道),非全棟建築 */
-(function(){
-  const field=new THREE.Mesh(new THREE.PlaneGeometry(168,138),
-    new THREE.MeshLambertMaterial({color:0x5c8a45}));
-  field.rotation.x=-Math.PI/2;field.position.set(-128,4.3,-126);decorGroup.add(field);
-  const track=new THREE.Mesh(new THREE.RingGeometry(38,50,36),
-    new THREE.MeshBasicMaterial({color:0xb15a40,side:THREE.DoubleSide}));
-  track.rotation.x=-Math.PI/2;track.position.set(-112,4.6,-108);track.scale.set(1.4,1,1);decorGroup.add(track);
-  const infield=new THREE.Mesh(new THREE.CircleGeometry(38,28),
-    new THREE.MeshLambertMaterial({color:0x4f7d38}));
-  infield.rotation.x=-Math.PI/2;infield.position.set(-112,4.5,-108);infield.scale.set(1.4,1,1);decorGroup.add(infield);
-})();
-/* 遠雄明玥庭園(建蔽率16%,塔樓四周庭園綠地) */
-(function(){const g=new THREE.Mesh(new THREE.PlaneGeometry(74,60),
-  new THREE.MeshLambertMaterial({color:0x6cae55}));
-  g.rotation.x=-Math.PI/2;g.position.set(0,0.6,-2);decorGroup.add(g);})();
-/* 公(公園)開放綠地 */
-(function(){const park=new THREE.Mesh(new THREE.PlaneGeometry(130,120),
-  new THREE.MeshLambertMaterial({color:0x4f8f4e}));
-  park.rotation.x=-Math.PI/2;park.position.set(255,4.3,-175);decorGroup.add(park);})();
-/* 新洲美段路網(用 Joe 衛星描的實際線位畫成路帶,貼地不遮蔽視線) */
-function ribbon(pts,w,color){const hw=w/2,P=[],idx=[];let v=0;
-  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1];let dx=b[0]-a[0],dn=b[1]-a[1];const L=Math.hypot(dx,dn)||1;
-    const px=-dn/L*hw,pn=dx/L*hw;
-    P.push(a[0]+px,4.7,-(a[1]+pn), a[0]-px,4.7,-(a[1]-pn), b[0]+px,4.7,-(b[1]+pn), b[0]-px,4.7,-(b[1]-pn));
-    idx.push(v,v+1,v+2,v+1,v+3,v+2);v+=4;}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));
-  g.setIndex(idx);g.computeVertexNormals();scene.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide})));}
-const ROADS=[
-  [[-320,-50],[-118,-100],[120,-120],[421,-108]], // 河美街(河岸第一排之南,貼河)
-  [[-55,-28],[421,-22]],                     // 福真路(明玥南側)
-  [[-55,103],[419,118]],                     // 福善路
-  [[-55,165],[419,182]],                     // 福美路
-  [[-40,-66],[-45,299]],                     // 承美路(校地/住宅分界)
-  [[191,-108],[190,107]],                    // 承真街
-  [[422,-73],[418,325]],                     // 承德街
-];
-const ROADNAMES=['河美街','福真路','福善路','福美路','承美路','承真街','承德街'];
-ROADS.forEach(r=>ribbon(r,13,0x6b7682));
-/* 視線射線 */
-const rayMat=new THREE.LineBasicMaterial({color:0xffb454});let rayLine=null;
-function updateRay(t,ey){if(rayLine){scene.remove(rayLine);rayLine.geometry.dispose();}
-  const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,ey,0),new THREE.Vector3(t[0],t[2],-t[1])]);
-  rayLine=new THREE.Line(g,rayMat);scene.add(rayLine);}
-
-/* 相機 */
-let yaw=Math.atan2(SEA[0]-OBS().e,SEA[1]-OBS().n),pitch=-0.04;
-let fov3d=60;
-function applyCam(ey){const o=OBS();if(camera.fov!==fov3d){camera.fov=fov3d;camera.updateProjectionMatrix();}camera.position.set(o.e,ey,-o.n);
-  const fx=Math.cos(pitch)*Math.sin(yaw),fy=Math.sin(pitch),fz=-Math.cos(pitch)*Math.cos(yaw);
-  camera.lookAt(o.e+fx*1000,ey+fy*1000,-o.n+fz*1000);}
-/* 2D 正射鳥瞰(北朝上、正上方垂直俯視) */
-const ocam=new THREE.OrthographicCamera(-1,1,1,-1,1,40000);
-let mode2d=false, activeCam=camera, panE=0, panN=180, zoom=1, pinch=0;
-function applyOrtho(){const a=innerWidth/innerHeight;let hw,hh;
-  if(a>=2.18){hh=380;hw=hh*a;}else{hw=780;hh=hw/a;}
-  hw/=zoom;hh/=zoom;
-  ocam.left=-hw;ocam.right=hw;ocam.top=hh;ocam.bottom=-hh;
-  ocam.position.set(panE,8000,-panN);ocam.up.set(0,0,-1);ocam.lookAt(panE,0,-panN);
-  ocam.updateProjectionMatrix();
-  ocam._mx=2*hw/innerWidth;ocam._my=2*hh/innerHeight;}
-function applyObsVis(){for(let k=0;k<bmesh.length;k++)bmesh[k].visible=mode2d?true:(k!==OBSI);}
-let drag=false,lx=0,ly=0;
-const tiltEl=document.getElementById('tilt');
-function setPitch(p){pitch=Math.max(-1.30,Math.min(0.80,p));if(tiltEl)tiltEl.value=pitch;}
-function lookStart(x,y){drag=true;lx=x;ly=y;const h=document.getElementById('hint');if(h)h.style.opacity=0;}
-function lookMove(x,y){if(!drag)return;
-  if(mode2d){panE-=(x-lx)*(ocam._mx||1);panN+=(y-ly)*(ocam._my||1);lx=x;ly=y;return;}
-  yaw-=(x-lx)*0.0032;setPitch(pitch-(y-ly)*0.0032);lx=x;ly=y;}
-function lookEnd(){drag=false;pinch=0;}
-// 桌機滑鼠
-cv.addEventListener('mousedown',e=>lookStart(e.clientX,e.clientY));
-window.addEventListener('mousemove',e=>lookMove(e.clientX,e.clientY));
-window.addEventListener('mouseup',lookEnd);
-// 觸控:touchmove 綁在 canvas 且 preventDefault,擋掉瀏覽器下拉/捲動,往下拖才不會被中斷
-cv.addEventListener('touchstart',e=>{
-  if(e.touches.length===2){pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);drag=false;return;}
-  const t=e.touches[0];lookStart(t.clientX,t.clientY);},{passive:true});
-cv.addEventListener('touchmove',e=>{
-  if(e.touches.length===2&&pinch){e.preventDefault();const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-    if(mode2d){zoom=Math.max(0.3,Math.min(8,zoom*d/pinch));}else{fov3d=Math.max(12,Math.min(78,fov3d*pinch/d));}pinch=d;return;}
-  if(!drag)return;e.preventDefault();const t=e.touches[0];lookMove(t.clientX,t.clientY);},{passive:false});
-cv.addEventListener('touchend',lookEnd);
-cv.addEventListener('touchcancel',lookEnd);
-cv.addEventListener('wheel',e=>{e.preventDefault();if(mode2d){zoom=Math.max(0.3,Math.min(8,zoom*(e.deltaY<0?1.12:0.89)));}else{fov3d=Math.max(12,Math.min(78,fov3d*(e.deltaY<0?0.92:1.08)));}},{passive:false});
-if(tiltEl)tiltEl.addEventListener('input',()=>{pitch=+tiltEl.value;});
-setTimeout(()=>document.getElementById('hint').style.opacity=0,4200);
-
-/* 標籤 */
-const LABELS=[
-  {p:[-300,7,-360],t:'基隆河',cls:'water'},
-  {p:[-6400,7,2800],t:'淡水河',cls:'water'},
-  {p:[-2400,10,-900],t:'社子島',cls:'flat'},
-  {p:[-3900,7,650],t:'社子島濕地',cls:'water'},
-  {p:[-1200,12,2500],t:'關渡平原',cls:'flat'},
-  {p:[-5340,46,1550],t:'關渡大橋',cls:'flat'},
-  {p:[-4550,168,3400],t:'北藝大稜線 150m',cls:'peak'},
-  {p:[-8676,640,2390],t:'觀音山 616m',cls:'peak'},
-  {p:[2500,1110,10500],t:'大屯山 1092m',cls:'peak'},
-  {p:[-9353,232,5400],t:'淡江大橋 211m',cls:'peak'},
-  {p:[-10700,30,8240],t:'淡水出海口',cls:'water'},
-  {p:[0,100,0],t:'遠雄明玥 27F',cls:'bld',self:'明玥'},
-  {p:[-118,90,-20],t:'遠雄泱玥 24F',cls:'bld',self:'泱玥'},
-  {p:[40,52,63],t:'達麗河蘊 AB(14F)',cls:'bld'},
-  {p:[-229,82,38],t:'潤泰新洲美 22F',cls:'bld'},
-  {p:[140,58,250],t:'洲美公宅 A/B/C/D 12棟(15F)',cls:'bld'},
-  {p:[165,84,29],t:'士科大院 AB南北雙塔(22F)',cls:'bld'},
-  {p:[-268,32,145],t:'國際羽球館(校地西側)',cls:'flat'},
-  {p:[-150,12,176],t:'洲美國中小',cls:'flat'},
-  {p:[-26,6,6],t:'明玥庭園',cls:'flat'},
-  {p:[30,52,-72],t:'河岸建案·河岸第一排(未定)',cls:'bld'},
-  {p:[-30,5,210],t:'承美路',cls:'road'},
-  {p:[260,5,-45],t:'河美街',cls:'road'},
-  {p:[-209,58,275],t:'住宅 住3-2(15F×4)',cls:'bld'},
-  {p:[235,9,240],t:'公園',cls:'flat'},
-  {p:[520,70,200],t:'科專區(科技,樓高估)',cls:'bld'},
-  {p:[-690,12,165],t:'橋下平面停車場',cls:'flat'}
-];
-let showLbl=true;
-const lblEls=LABELS.map(L=>{const d=document.createElement('div');d.className='lbl '+(L.cls||'');
-  d.textContent=L.t;document.body.appendChild(d);return d;});
-function updateLabels(){for(let i=0;i<LABELS.length;i++){
-  const el=lblEls[i];
-  if(!mode2d&&LABELS[i].self&&OBS().name.indexOf(LABELS[i].self)>=0){el.style.display='none';continue;}
-  const v=new THREE.Vector3(LABELS[i].p[0],LABELS[i].p[1],-LABELS[i].p[2]).project(activeCam);
-  if(!showLbl||v.z>1||v.x<-1.1||v.x>1.1||v.y<-1.1||v.y>1.1){el.style.display='none';continue;}
-  el.style.display='block';el.style.left=((v.x*.5+.5)*innerWidth)+'px';el.style.top=((-v.y*.5+.5)*innerHeight)+'px';}}
-
-/* UI */
-const floorEl=document.getElementById('floor');let curTarget=SEA;
-function setChip(id,res){const c=document.getElementById(id);c.classList.remove('ok','no');
-  c.classList.add(res.ok?'ok':'no');c.querySelector('.t').textContent=res.ok?'看得到':'被擋住';}
-const km=m=>(m/1000).toFixed(1)+'km';
-function refresh(){const fl=+floorEl.value,ey=flToEye(fl);
-  document.getElementById('flN').textContent=fl;document.getElementById('htV').textContent=Math.round(ey);
-  const tag=document.getElementById('flTag');
-  if(fl<=OBS().fl){tag.textContent='實際樓層';tag.className='tag real';}else{tag.textContent='假設加高(本案'+OBS().fl+'樓)';tag.className='tag hyp';}
-  const rs=visible(SEA,ey),rb=visible(BRIDGE,ey),rr=visible(RIVER,ey);
-  setChip('chSea',rs);setChip('chBridge',rb);setChip('chRiver',rr);
-  document.getElementById('dSea').textContent=rs.ok?'海距 '+km(13500):('被'+(rs.by||'')+'擋');
-  document.getElementById('dBridge').textContent=rb.ok?'塔頂可見':'遮點 '+km(rb.at);
-  document.getElementById('dRiver').textContent=rr.ok?'水面/平原可見':('被'+(rr.by||'')+'擋 @'+km(rr.at));
-  applyCam(ey);updateRay(curTarget,ey);if(xsecOpen)drawXsec(ey);}
-floorEl.addEventListener('input',refresh);
-(function(){const m=document.getElementById('marks'),max=+floorEl.max;
-  function mk(fl,cls,txt){const d=document.createElement('div');d.className='mk '+cls;
-    d.style.left=((fl-1)/(max-1)*100)+'%';d.innerHTML='<i></i>'+txt;m.appendChild(d);}
-  mk(1,'','1F');mk(23,'real','23F');mk(27,'','27F');if(SEA_FL)mk(SEA_FL,'sea','見海 '+SEA_FL+'F');mk(max,'',max+'F');})();
-document.getElementById('bSea').onclick=()=>{curTarget=SEA;yaw=Math.atan2(SEA[0]-OBS().e,SEA[1]-OBS().n);setPitch(-0.04);
-  document.getElementById('cName').textContent='出海口';refresh();};
-document.getElementById('bBridge').onclick=()=>{curTarget=BRIDGE;yaw=Math.atan2(BRIDGE[0]-OBS().e,BRIDGE[1]-OBS().n);setPitch(-0.02);
-  document.getElementById('cName').textContent='淡江大橋';refresh();};
-document.getElementById('bNear').onclick=()=>{curTarget=RIVER;yaw=Math.atan2(RIVER[0]-OBS().e,RIVER[1]-OBS().n);setPitch(-0.55);document.getElementById('cName').textContent='近景俯瞰';refresh();};
-function setObserver(i){OBSI=i;applyObsVis();
-  SEA_FL=null;for(let fl=1;fl<=200;fl++)if(visible(SEA,flToEye(fl)).ok){SEA_FL=fl;break;}
-  const nm=OBS().name.split(' ')[0];
-  document.getElementById('titleH').textContent='視點:'+nm+' → 全分區建築';
-  const vpos=VP.indexOf(OBSI),nextI=VP[(vpos+1)%VP.length];
-  document.getElementById('bObs').textContent='視點→'+BUILDINGS[nextI].name.split(' ')[0];
-  floorEl.value=Math.min(+floorEl.max,OBS().fl);
-  yaw=Math.atan2(SEA[0]-OBS().e,SEA[1]-OBS().n);setPitch(-0.05);
-  document.getElementById('cName').textContent=nm+' 視點 '+OBS().fl+'F';refresh();}
-document.getElementById('bObs').onclick=()=>{const vpos=VP.indexOf(OBSI);setObserver(VP[(vpos+1)%VP.length]);};
-/* 2D 真實地圖(OSM 街圖 + 你校正後的建物框) */
-const A_LAT=25.09790, A_LNG=121.50400;                 // 衛星校正工具錨點
-const MX_LAT=110540, MX_LNG=111320*Math.cos(A_LAT*Math.PI/180);
-const M_LAT=A_LAT+50/MX_LAT, M_LNG=A_LNG+9/MX_LNG;     // 明玥真實經緯(校正時明玥落在 e9,n50)
-const en2ll=(e,n)=>[M_LAT+n/MX_LAT, M_LNG+e/MX_LNG];
-let map2dOn=false, lmap=null, obsMarker=null;
-function initMap(){
-  lmap=L.map('map2d',{zoomControl:false,attributionControl:false,maxZoom:19}).setView(en2ll(60,80),17);
-  const osm=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19});
-  const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
-  osm.addTo(lmap);
-  L.control.layers({'OSM 街圖':osm,'衛星 Esri(沙盒內可能空白)':sat},null,{position:'topright',collapsed:false}).addTo(lmap);
-  const seen={};
-  BUILDINGS.forEach((b,i)=>{
-    const c='#'+('000000'+b.color.toString(16)).slice(-6);
-    const sw=en2ll(b.e-b.w/2,b.n-b.d/2), ne=en2ll(b.e+b.w/2,b.n+b.d/2);
-    const isObs=(i===OBSI);
-    L.rectangle([sw,ne],{color:isObs?'#ffb454':c,weight:isObs?2:1,
-      fillColor:c,fillOpacity:b.ghost?0.25:0.62}).addTo(lmap);
-    const base=b.name.split(' ')[0].replace(/[AB]$/,'');
-    if(!seen[base]){seen[base]=1;
-      L.circleMarker(en2ll(b.e,b.n),{radius:0,opacity:0,fillOpacity:0,interactive:false})
-        .addTo(lmap).bindTooltip(base,{permanent:true,direction:'center',className:'mlbl'}).openTooltip();}
-  });
-  // 道路疊層(模型路網,對齊 OSM 真實道路)
-  ROADS.forEach((r,i)=>{const ll=r.map(p=>en2ll(p[0],p[1]));
-    L.polyline(ll,{color:'#cdd6df',weight:3,opacity:.9}).addTo(lmap);
-    L.circleMarker(ll[Math.floor(ll.length/2)],{radius:0,opacity:0,fillOpacity:0,interactive:false})
-      .addTo(lmap).bindTooltip(ROADNAMES[i]||'',{permanent:true,direction:'center',className:'mlbl'});});
-  // 河岸線
-  L.polyline(BANK.map(p=>en2ll(p[0],p[1])),{color:'#36c9b8',weight:3,opacity:.85,dashArray:'5 4'}).addTo(lmap);
-  obsMarker=L.circleMarker(en2ll(OBS().e,OBS().n),{radius:6,color:'#0b1418',weight:2,
-    fillColor:'#ffb454',fillOpacity:1}).addTo(lmap).bindTooltip('視點',{permanent:true,direction:'top',className:'mlbl'});
-}
-
-/* 近區地面真實底圖:先試 Esri 空照,後援 OSM 街圖(沙盒已知可載) */
-let satPlane=null;
-const SAT_SRC=[
-  {n:'Esri空照',u:(z,x,y)=>'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+y+'/'+x},
-  {n:'OSM街圖',u:(z,x,y)=>'https://a.tile.openstreetmap.org/'+z+'/'+x+'/'+y+'.png'},
-];
-async function loadSatGround(btn){
-  if(satPlane){scene.remove(satPlane);satPlane.material.map&&satPlane.material.map.dispose();satPlane.material.dispose();satPlane.geometry.dispose();satPlane=null;
-    decorGroup.visible=true;btn.textContent='衛星底圖';btn.classList.remove('on');return;}
-  const Z=15,P=Math.pow(2,Z),TS=256;
-  const eW=-5000,eE=1900,nS=-2900,nN=2400; // 涵蓋社子島/基隆河/淡水河近段/開發區
-  const latNW=M_LAT+nN/MX_LAT, lonNW=M_LNG+eW/MX_LNG, latSE=M_LAT+nS/MX_LAT, lonSE=M_LNG+eE/MX_LNG;
-  const lon2x=lon=>Math.floor((lon+180)/360*P);
-  const lat2y=lat=>Math.floor((1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*P);
-  const x2lon=x=>x/P*360-180;
-  const y2lat=y=>{const a=Math.PI-2*Math.PI*y/P;return 180/Math.PI*Math.atan(0.5*(Math.exp(a)-Math.exp(-a)));};
-  const xMin=lon2x(lonNW),xMax=lon2x(lonSE),yMin=lat2y(latNW),yMax=lat2y(latSE);
-  const cols=xMax-xMin+1, rows=yMax-yMin+1;
-  if(cols<1||rows<1||cols*rows>72){btn.textContent='範圍異常';return;}
-  const loadTile=(src,x,y)=>new Promise(res=>{const im=new Image();im.crossOrigin='anonymous';let d=false;
-    const to=setTimeout(()=>{if(!d){d=true;res(null);}},6000);
-    im.onload=()=>{if(!d){d=true;clearTimeout(to);res(im);}};
-    im.onerror=()=>{if(!d){d=true;clearTimeout(to);res(null);}};
-    im.src=src.u(Z,x,y);});
-  for(const src of SAT_SRC){
-    btn.textContent='載入中…'+src.n;
-    const can=document.createElement('canvas');can.width=cols*TS;can.height=rows*TS;
-    const cx=can.getContext('2d');let ok=0;const jobs=[];
-    for(let yy=yMin;yy<=yMax;yy++)for(let xx=xMin;xx<=xMax;xx++){
-      jobs.push(loadTile(src,xx,yy).then(im=>{if(im){cx.drawImage(im,(xx-xMin)*TS,(yy-yMin)*TS,TS,TS);ok++;}}));}
-    await Promise.all(jobs);
-    if(ok===0){continue;}
-    try{cx.getImageData(0,0,1,1);}catch(e){continue;}
-    const gW=x2lon(xMin),gE=x2lon(xMax+1),gN=y2lat(yMin),gS=y2lat(yMax+1);
-    const peW=(gW-M_LNG)*MX_LNG,peE=(gE-M_LNG)*MX_LNG,pnN=(gN-M_LAT)*MX_LAT,pnS=(gS-M_LAT)*MX_LAT;
-    const tex=new THREE.CanvasTexture(can);if(THREE.sRGBEncoding!==undefined)tex.encoding=THREE.sRGBEncoding;
-    satPlane=new THREE.Mesh(new THREE.PlaneGeometry(peE-peW,pnN-pnS),new THREE.MeshBasicMaterial({map:tex}));
-    satPlane.rotation.x=-Math.PI/2;satPlane.position.set((peW+peE)/2,4.25,-(pnS+pnN)/2);scene.add(satPlane);
-    decorGroup.visible=false;btn.textContent=src.n+'✓('+ok+')';btn.classList.add('on');return;
-  }
-  btn.textContent='衛星底圖';
-  alert('Esri 空照與 OSM 圖磚都無法當貼圖(沙盒擋住影像伺服器或無 CORS)。此環境走不通——建議改用「建築視覺化(程序材質)」或在你的實景空拍照上疊加分析。');
-}
-document.getElementById('bsat').onclick=function(){loadSatGround(this).catch(e=>{this.textContent='衛星底圖';alert('載入失敗:'+e.message);});};
-document.getElementById('b2d').onclick=function(){
-  map2dOn=!map2dOn;
-  document.getElementById('map2d').style.display=map2dOn?'block':'none';
-  cv.style.display=map2dOn?'none':'block';
-  document.body.classList.toggle('mapmode',map2dOn);
-  this.textContent=map2dOn?'3D視角':'2D鳥瞰';this.classList.toggle('on',map2dOn);
-  if(map2dOn){ if(!lmap) initMap();
-    if(obsMarker)obsMarker.setLatLng(en2ll(OBS().e,OBS().n));
-    setTimeout(()=>{lmap.invalidateSize();lmap.setView(en2ll(60,80),17);},60); }
-};
-document.getElementById('bLbl').onclick=function(){showLbl=!showLbl;this.classList.toggle('on',showLbl);};
-let xsecOpen=false;const xsec=document.getElementById('xsec');
-document.getElementById('bXsec').onclick=function(){xsecOpen=!xsecOpen;xsec.classList.toggle('show',xsecOpen);
-  this.classList.toggle('on',xsecOpen);if(xsecOpen)drawXsec(flToEye(+floorEl.value));};
-document.getElementById('xClose').onclick=()=>{xsecOpen=false;xsec.classList.remove('show');
-  document.getElementById('bXsec').classList.remove('on');};
-
-/* 剖面 */
-const xc=document.getElementById('xcanvas'),xx=xc.getContext('2d');
-function drawXsec(ey){const D=Math.hypot(SEA[0],SEA[1]),w=xc.clientWidth,h=xc.clientHeight,dpr=Math.min(devicePixelRatio,2);
-  xc.width=w*dpr;xc.height=h*dpr;xx.setTransform(dpr,0,0,dpr,0,0);xx.clearRect(0,0,w,h);
-  const pad=22,maxH=400,X=r=>pad+(w-pad*1.4)*r/D,Y=v=>h-14-(h-26)*Math.min(v,maxH)/maxH;
-  xx.beginPath();xx.moveTo(X(0),Y(0));let fb=null;
-  for(let r=0;r<=D;r+=40){const f=r/D,ter=heightAt(SEA[0]*f,SEA[1]*f).h;xx.lineTo(X(r),Y(ter));
-    if(fb===null){const s=ey+(0-ey)*f-r*(D-r)/(2*REFF);if(ter>s+1&&r>200)fb=r;}}
-  xx.lineTo(X(D),Y(0));xx.closePath();xx.fillStyle='#33503f';xx.fill();
-  xx.fillStyle='#2f7d9e';xx.fillRect(X(D)-3,Y(0),3,h);
-  xx.strokeStyle='#ffb454';xx.lineWidth=2;xx.beginPath();xx.moveTo(X(0),Y(ey));xx.lineTo(X(D),Y(0));xx.stroke();
-  xx.fillStyle='#ffb454';xx.beginPath();xx.arc(X(0),Y(ey),3.5,0,7);xx.fill();
-  xx.fillStyle='#e7d3a6';xx.font='10px ui-monospace';xx.fillText('北藝大稜線',X(5720)-24,Y(150)-6);xx.fillText('出海口',X(D)-30,Y(0)-4);
-  if(fb){const f=fb/D,ter=heightAt(SEA[0]*f,SEA[1]*f).h;xx.fillStyle='#ff6b6b';xx.beginPath();xx.arc(X(fb),Y(ter),4,0,7);xx.fill();}
-  xx.strokeStyle='#ffffff22';xx.lineWidth=1;xx.beginPath();xx.moveTo(pad,h-14);xx.lineTo(w-4,h-14);xx.stroke();
-  xx.fillStyle='#8aa4a8';xx.font='9px ui-monospace';xx.fillText('0',2,Y(0)+3);xx.fillText('150m',0,Y(150)+3);xx.fillText('300m',0,Y(300)+3);
-  const cap=document.getElementById('xcap');
-  cap.innerHTML=fb?('視線在 <b style="color:#ff6b6b">'+(fb/1000).toFixed(1)+'km</b> 撞上北藝大稜線,海被擋。'+(SEA_FL?(' 本模型約 <b style="color:#ffb454">第 '+SEA_FL+' 樓 / '+Math.round(flToEye(SEA_FL))+'m</b> 才越得過。'):''))
-    :('視線越過所有地形 → <b style="color:#5fd08a">看得到海</b>(高度 '+Math.round(ey)+'m)。');}
-
-function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();if(mode2d)applyOrtho();}
-addEventListener('resize',resize);resize();
-const cHead=document.getElementById('cHead');
-function loop(){const ey=flToEye(+floorEl.value);applyCam(ey);
-  let hd=(Math.atan2(Math.sin(yaw),Math.cos(yaw))*180/Math.PI);hd=(hd+360)%360;cHead.textContent=Math.round(hd)+'°';
-  {const zb=document.getElementById('cZoom');if(zb)zb.textContent='×'+(mode2d?zoom:60/fov3d).toFixed(1);}
-  if(map2dOn){requestAnimationFrame(loop);return;}
-  if(mode2d)applyOrtho();
-  updateLabels();renderer.render(scene,activeCam);requestAnimationFrame(loop);}
-refresh();loop();
+  // CDN 載入狀態追蹤
+  window.__cdnStatus = { three: false, leaflet: false };
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+        onload="window.__cdnStatus.three=true"
+        onerror="document.getElementById('loading-screen').querySelector('.text').textContent='Three.js 載入失敗，嘗試備援…'; 
+                 var s=document.createElement('script'); s.src='https://unpkg.com/three@0.128.0/build/three.min.js'; 
+                 s.onload=function(){window.__cdnStatus.three=true}; document.head.appendChild(s);">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
+        onload="window.__cdnStatus.leaflet=true"
+        onerror="console.warn('Leaflet 載入失敗，2D地圖功能停用'); window.__cdnStatus.leaflet=true;">
+</script>
+
+<!-- 主程式 -->
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

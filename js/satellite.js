@@ -11,8 +11,12 @@ const TILE_SOURCES = [
     getUrl: (z, x, y) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`
   },
   {
+    name: 'Google衛星',
+    getUrl: (z, x, y) => `https://mt1.google.com/vt/lyrs=s&x=${x}&y=${y}&z=${z}`
+  },
+  {
     name: 'OSM街圖',
-    getUrl: (z, x, y) => `https://a.tile.openstreetmap.org/${z}/${x}/${y}.png`
+    getUrl: (z, x, y) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`
   }
 ];
 
@@ -42,9 +46,9 @@ export async function loadSatelliteGround(terrainMesh, onStatus) {
   const TILE_COUNT = Math.pow(2, ZOOM);
   const TILE_SIZE = 256;
 
-  // 地形網格的世界範圍（對應 scene.js 中的 EAST_MIN/MAX, NORTH_MIN/MAX）
-  const EAST_MIN = -16000, EAST_MAX = 3000;
-  const NORTH_MIN = -4000, NORTH_MAX = 15000;
+  // 地形網格的世界範圍 — 聚焦核心可見區域減少 tile 數量
+  const EAST_MIN = -12000, EAST_MAX = 2000;
+  const NORTH_MIN = -3000, NORTH_MAX = 10000;
 
   // 轉為經緯度
   const latSouth = MINGYU_LAT + NORTH_MIN / METERS_PER_LAT;
@@ -85,6 +89,10 @@ export async function loadSatelliteGround(terrainMesh, onStatus) {
             if (img) {
               ctx.drawImage(img, (tx - xMin) * TILE_SIZE, (ty - yMin) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
               successCount++;
+            } else {
+              // 載入失敗的 tile 填充深綠色（接近地形色），比留空白好
+              ctx.fillStyle = '#4a6b42';
+              ctx.fillRect((tx - xMin) * TILE_SIZE, (ty - yMin) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             }
           })
         );
@@ -92,7 +100,15 @@ export async function loadSatelliteGround(terrainMesh, onStatus) {
     }
     await Promise.all(jobs);
 
+    const totalTiles = cols * rows;
+    const successRate = successCount / totalTiles;
+
+    // 如果載入率太低，跳過此來源（避免半成品拼接效果）
     if (successCount === 0) continue;
+    if (successRate < 0.85) {
+      onStatus(source.name + ' 載入不完整(' + Math.round(successRate * 100) + '%)，跳過…');
+      continue;
+    }
 
     // CORS 驗證
     try { ctx.getImageData(0, 0, 1, 1); } catch (e) { continue; }

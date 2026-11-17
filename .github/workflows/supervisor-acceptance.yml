@@ -1,0 +1,14 @@
+name: supervisor-acceptance
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Playwright (Python)
+        run: pip install --quiet playwright==1.65.2
+      - name: Syntax check all JS files
+        run: |
+          set -e
+          find js data -name '*.js' -print -exec node --check {} \;
+      - name: Browser acceptance tests
+        run: python3 -m unittest tests.test_browser -v

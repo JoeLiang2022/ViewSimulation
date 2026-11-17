@@ -49,5 +49,3 @@ export const BUILDINGS = [
   { name: '科專 ~18F', e: 299, n: -66, w: 42, d: 38, fl: 18, color: 0xc98a4a, ghost: true },
   { name: '平面停車場 交', e: -464, n: 165, w: 80, d: 110, fl: 1, color: 0x9a9a9a }
 ];
-</antml>
-<action tool="read_file" path="data/geography.js">

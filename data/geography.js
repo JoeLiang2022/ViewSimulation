@@ -76,7 +76,7 @@ export const LABELS = [
   { position: [-9353, 232, 5400], text: '淡江大橋 211m', category: 'peak' },
   { position: [-10700, 30, 8240], text: '淡水出海口', category: 'water' },
   { position: [0, 100, 0], text: '遠雄明玥 27F', category: 'bld', selfKey: '明玥' },
-  { position: [-118, 90, -20], text: '遠雄泱玥 24F', category: 'bld', selfKey: '泱玥' },
+  { position: [-118, 90, -20], text: '遠雄泱玥 25F', category: 'bld', selfKey: '泱玥' },
   { position: [40, 52, 63], text: '達麗河蘊 AB(14F)', category: 'bld' },
   { position: [-229, 82, 38], text: '潤泰新洲美 22F', category: 'bld' },
   { position: [140, 58, 250], text: '洲美公宅 A/B/C/D 12棟(15F)', category: 'bld' },

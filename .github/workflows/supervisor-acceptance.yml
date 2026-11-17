@@ -1,5 +1,5 @@
 name: supervisor-acceptance
-on: [push, pull_request]
+on: workflow_dispatch  # 只給總管 CI 讀 run: 步驟；不讓 GitHub Actions 自動執行
 jobs:
   test:
     runs-on: ubuntu-latest

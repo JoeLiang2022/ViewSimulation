@@ -17,6 +17,9 @@ export const GROUND_ELEVATION = 4;
 /** 標準層高（公尺/層） */
 export const FLOOR_HEIGHT = 3.4;
 
+/** 人眼離地板高度（公尺） */
+export const EYE_HEIGHT = 1.5;
+
 /** 地圖錨點（衛星校正工具原點） */
 export const ANCHOR_LAT = 25.09790;
 export const ANCHOR_LNG = 121.50400;

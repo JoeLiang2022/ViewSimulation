@@ -3,7 +3,7 @@
  * 沿視線路徑步進檢查是否被建物或地形遮擋
  * 考慮地球曲率 + 大氣折射修正
  */
-import { EFFECTIVE_EARTH_RADIUS, GROUND_ELEVATION, FLOOR_HEIGHT } from './constants.js';
+import { EFFECTIVE_EARTH_RADIUS, GROUND_ELEVATION, FLOOR_HEIGHT, EYE_HEIGHT } from './constants.js';
 import { BUILDINGS } from '../data/buildings.js';
 import { getTerrainAt } from './terrain.js';
 
@@ -24,9 +24,11 @@ function isInsideBuilding(easting, northing, building) {
 
 /**
  * 將樓層數轉換為視線高度（公尺）
+ * 第 N 樓的眼高 = 地面高程 + (N-1) 個樓層高度 + 人眼高度
+ * 意思是：第 1 樓地板 = 地面，人站在上面眼睛再高 1.5m
  */
 export function floorToEyeHeight(floor) {
-  return GROUND_ELEVATION + floor * FLOOR_HEIGHT;
+  return GROUND_ELEVATION + (floor - 1) * FLOOR_HEIGHT + EYE_HEIGHT;
 }
 
 /**

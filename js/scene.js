@@ -129,7 +129,7 @@ function createSheziVillage(scene) {
     if (!isInsidePolygon(e, n, SHEZI_ISLAND) && seededRandom() < 0.6) continue;
     const h = range(6, 22), w = range(22, 46), d = range(22, 46);
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
-    mesh.position.set(e, h / 2 + 2.5, -n);
+    mesh.position.set(e, GROUND_ELEVATION + h / 2, -n);
     scene.add(mesh);
   }
 }
@@ -155,7 +155,7 @@ function createDistantCityscape(scene) {
       const n = centerN + range(-widthN / 2, widthN / 2);
       const h = range(16, 52), w = range(36, 90), d = range(36, 90);
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
-      mesh.position.set(e, h / 2, -n);
+      mesh.position.set(e, GROUND_ELEVATION + h / 2, -n);
       scene.add(mesh);
     }
   }

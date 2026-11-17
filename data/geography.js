@@ -78,7 +78,7 @@ export const LABELS = [
   { position: [0, 100, 0], text: '遠雄明玥 27F', category: 'bld', selfKey: '明玥' },
   { position: [-118, 90, -20], text: '遠雄泱玥 25F', category: 'bld', selfKey: '泱玥' },
   { position: [40, 52, 63], text: '達麗河蘊 AB(14F)', category: 'bld' },
-  { position: [-229, 82, 38], text: '潤泰新洲美 22F', category: 'bld' },
+  { position: [-229, 82, 38], text: '潤泰新洲美 ~22F(未定)', category: 'bld' },
   { position: [140, 58, 250], text: '洲美公宅 A/B/C/D 12棟(15F)', category: 'bld' },
   { position: [165, 84, 29], text: '士科大院 AB南北雙塔(22F)', category: 'bld' },
   { position: [-268, 32, 145], text: '國際羽球館(校地西側)', category: 'flat' },

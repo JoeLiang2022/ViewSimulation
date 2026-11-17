@@ -50,9 +50,4 @@ export const BUILDINGS = [
   { name: '平面停車場 交', e: -464, n: 165, w: 80, d: 110, fl: 1, color: 0x9a9a9a }
 ];
 </antml>
-<action/>
-
-現在修改 geography.js：
-<action tool="edit_file" path="data/geography.js">
-<old>  { position: [-118, 90, -20], text: '遠雄泱玥 24F', category: 'bld', selfKey: '泱玥' },</antml>
-<new>  { position: [-118, 90, -20], text: '遠雄泱玥 25F', category: 'bld', selfKey: '泱玥' },</new>
+<action tool="read_file" path="data/geography.js">

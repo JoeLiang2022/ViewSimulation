@@ -13,8 +13,8 @@ import { getBuildingTopHeight } from './visibility.js';
  */
 function getTerrainColor(height, type) {
   const color = new THREE.Color();
-  if (type === 'sea') return color.setHex(0x52707f);
-  if (type === 'river') return color.setHex(0x5d7886);
+  if (type === 'sea') return color.setHex(0x3f5e74);  // 灰藍：與海面平面統一色系
+  if (type === 'river') return color.setHex(0x4a6878);  // 偏綠灰：上游泥沙感
   if (type === 'wet') return color.setHex(0x707a52);
 
   if (height < 22) color.setHex(0x6fa45a);
@@ -83,9 +83,15 @@ function createTerrainMesh() {
  */
 function createSeaPlane() {
   // 海面平面：放在 Y=-1，確保不會 z-fight 到陸地(Y=4+)
+  // 使用 Lambert 材質讓海面受環境光影響，呈現自然的淡水河口灰綠偏藍
   const sea = new THREE.Mesh(
     new THREE.PlaneGeometry(120000, 120000),
-    new THREE.MeshBasicMaterial({ color: 0x1a6080, depthWrite: true })
+    new THREE.MeshLambertMaterial({ 
+      color: 0x3a5a6e,  // 淡水河口實景：灰綠偏藍，非亮藍泳池
+      transparent: true, 
+      opacity: 0.94, 
+      depthWrite: true 
+    })
   );
   sea.rotation.x = -Math.PI / 2;
   sea.position.set(0, -1, 0);
